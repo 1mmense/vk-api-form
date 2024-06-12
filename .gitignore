@@ -2,3 +2,4 @@ UploadImages/*
 !UploadImages/.gitkeep
 UploadVideos/*
 !UploadVideos/.gitkeep
+plog.log
