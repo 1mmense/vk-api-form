@@ -1,0 +1,4 @@
+UploadImages/*
+!UploadImages/.gitkeep
+UploadVideos/*
+!UploadVideos/.gitkeep
