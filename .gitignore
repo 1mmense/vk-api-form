@@ -1,5 +1,10 @@
-UploadImages/*
-!UploadImages/.gitkeep
-UploadVideos/*
-!UploadVideos/.gitkeep
+files/uploadImages/*
+!files/uploadImages/.gitkeep
+files/uploadVideos/*
+!files/uploadVideos/.gitkeep
+files/doneVideos/*
+!files/doneVideos/.gitkeep
+files/captchas/*
 plog.log
+files/temp*/*
+!files/temp*/.gitkeep

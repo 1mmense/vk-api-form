@@ -1,10 +1,15 @@
 <?php
 
+define('FILES_FOLDER', '../files');
+define('CAPTCHAS_FOLDER', FILES_FOLDER . '/captchas');
+define('CAPTCHA_TEMP_NAME', 'temp.jpg');
+define('GITKEEP_FILE', '.gitkeep');
+
 function fn_plog()
 {
     $file = 'plog.log';
 
-    $resource = fopen($file, 'w+');
+    $resource = fopen($file, 'a+');
 
     if ($resource) {
         $date = new DateTime('now', new DateTimeZone('Europe/Samara'));
