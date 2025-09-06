@@ -5,19 +5,19 @@ require_once '../helpers/Service.php';
 class VkApi
 {
     // IF IT DOESN'T WORK, CHANGE SLEEP_TIME TO A LARGER VALUE (300000)
-    // https://oauth.vk.com/authorize?client_id=6385226&redirect_uri=https://oauth.vk.com/blank.html&display=page&scope=offline,photos,video,wall,groups,friends&response_type=token&v=5.131
+    // https://oauth.vk.ru/authorize?client_id=6385226&redirect_uri=https://oauth.vk.ru/blank.html&display=page&scope=offline,photos,video,wall,groups,friends&response_type=token&v=5.131
     // public const TOKEN = 'vk1.a.B_1TTdy0nUP1-zuYZwpwJ7oUMKYws9fvkznhSvviaz4-6kCycpM3ibg36h6hfCHzNpoawzyn01zBNz4WFZTg9VJhOwrIjBv3Zq0UyxWG_h5_iCYLMS2YeptSUqE07pL5BhzQ0T0DGzm7DG0SlIkQg7ncc_aFlJ4gmnFefgDPg0vxrytxW6-L-vq2YMvk1uevV_XhG23ckAXJwSJSGE56fg';
     public const TOKEN = 'vk1.a.bBO4bZN574nyexHOJ_whCPItEPIsiDVmpCViYU14Hn_BiPB1anxHieyP06-UnZrI3nLse9WHPURnKWaMeozvG5aKRaX_rdhzEmVh8SqW3iWXv942CSrRxAoWYysViF-KiyU_S_fF49ibYo9U6ineD_G9hKJWHzyOuP4ruJzCpSoK3F_hzotnfRPUASn5XEhddz-q3S8Fu1cBA-04pbUHGQ';
     public const OWNER_ID = '-141375384';
     public const API_VERSION = '5.131';
-    public const URL_WALL_POST = 'https://api.vk.com/method/wall.post?';
-    public const URL_PHOTOS_GET = 'https://api.vk.com/method/photos.get?';
-    public const URL_GET_PHOTO_UPLOAD_SERVER = 'https://api.vk.com/method/photos.getUploadServer?';
-    public const URL_PHOTOS_SAVE = 'https://api.vk.com/method/photos.save?';
-    public const URL_VIDEOS_SAVE = 'https://api.vk.com/method/video.save?';
-    public const URL_FAVE_GET_PHOTOS = 'https://api.vk.com/method/fave.getPhotos?';
-    public const URL_LIKES_DELETE = 'https://api.vk.com/method/likes.delete';
-    public const URL_FAVE_GET = 'https://api.vk.com/method/fave.get?';
+    public const URL_WALL_POST = 'https://api.vk.ru/method/wall.post?';
+    public const URL_PHOTOS_GET = 'https://api.vk.ru/method/photos.get?';
+    public const URL_GET_PHOTO_UPLOAD_SERVER = 'https://api.vk.ru/method/photos.getUploadServer?';
+    public const URL_PHOTOS_SAVE = 'https://api.vk.ru/method/photos.save?';
+    public const URL_VIDEOS_SAVE = 'https://api.vk.ru/method/video.save?';
+    public const URL_FAVE_GET_PHOTOS = 'https://api.vk.ru/method/fave.getPhotos?';
+    public const URL_LIKES_DELETE = 'https://api.vk.ru/method/likes.delete';
+    public const URL_FAVE_GET = 'https://api.vk.ru/method/fave.get?';
     public const FAVE_COUNT = 50;
     public const FAVE_OFFSET = 0;
     // public const SLEEP_TIME = '10000001';
