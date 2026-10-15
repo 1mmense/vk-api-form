@@ -35,7 +35,8 @@ function fn_print_r()
     $args = func_get_args();
 
     $console = false;
-    if (defined('CONSOLE') || empty($_SERVER['REQUEST_METHOD']) || defined('API')) {
+
+    if (empty($_SERVER['REQUEST_METHOD'])) {
         $console = true;
     }
 

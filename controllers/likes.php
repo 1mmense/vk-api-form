@@ -91,6 +91,8 @@ if ($mode === 'get_liked_photos') {
 
         $files_array = array_values($dir_content);
 
+        $saved_captchas = [];
+
         foreach ($files_array as $file_key => $file) {
             $saved_captchas[$file_key] = CAPTCHAS_FOLDER . '/' . $file;
         }

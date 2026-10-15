@@ -1,3 +1,4 @@
+files/*
 files/uploadImages/*
 !files/uploadImages/.gitkeep
 files/uploadVideos/*
@@ -8,3 +9,4 @@ files/captchas/*
 plog.log
 files/temp*/*
 !files/temp*/.gitkeep
+files/1temp/*
