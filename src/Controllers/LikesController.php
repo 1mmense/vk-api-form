@@ -1,6 +1,8 @@
 <?php
 
-require_once '../classes/VkApiClass.php';
+namespace App\Controllers;
+
+use App\Support\Config;
 
 $mode = $_REQUEST['mode'] ?? null;
 
@@ -13,13 +15,13 @@ if ($mode === 'get_liked_photos') {
 
         if (file_exists($temp_filename)) {
             file_put_contents(
-                CAPTCHAS_FOLDER . '/' . $_REQUEST['captcha_key'] . '.jpg',
+                Config::CAPTCHAS_FOLDER . '/' . $_REQUEST['captcha_key'] . '.jpg',
                 file_get_contents(
                     $temp_filename
                 )
             );
 
-            unlink(CAPTCHAS_FOLDER . '/' . CAPTCHA_TEMP_NAME);
+            unlink(Config::CAPTCHAS_FOLDER . '/' . Config::CAPTCHA_TEMP_NAME);
         }
     }
 
@@ -30,7 +32,7 @@ if ($mode === 'get_liked_photos') {
     if (!empty($items)) {
         $is_success = true;
 
-        $vkApi->post_data[CURLOPT_URL] = VkApi::URL_LIKES_DELETE;
+        $vkApi->post_data[CURLOPT_URL] = Config::URL_LIKES_DELETE;
 
         $post_fields = [
             'access_token' => $vkApi->post_fields['access_token'],
@@ -40,7 +42,7 @@ if ($mode === 'get_liked_photos') {
 
         foreach ($items as $item_key => $item) {
             $basename_full = basename($item['url']);
-            $basename = substr($basename_full, 0, strpos($basename_full, '?'));
+            $basename      = substr($basename_full, 0, strpos($basename_full, '?'));
 
             $vkApi->post_data[CURLOPT_POSTFIELDS] = array_merge($post_fields, [
                 'owner_id' => $item['owner_id'],
@@ -60,7 +62,7 @@ if ($mode === 'get_liked_photos') {
 
             if (empty($response['error']['error_msg'])) {
                 $ch = curl_init($item['url']);
-                $fp = fopen(VkApi::UPLOAD_IMAGES_FOLDER . '/' . $basename, 'wb');
+                $fp = fopen(Config::UPLOAD_IMAGES_FOLDER . '/' . $basename, 'wb');
                 curl_setopt($ch, CURLOPT_FILE, $fp);
                 curl_setopt($ch, CURLOPT_HEADER, 0);
                 curl_exec($ch);
@@ -80,13 +82,13 @@ if ($mode === 'get_liked_photos') {
     }
 } elseif ($mode === 'save_captcha') {
     if (!empty($_REQUEST['image'])) {
-        $filename = CAPTCHAS_FOLDER . '/' . CAPTCHA_TEMP_NAME;
+        $filename = Config::CAPTCHAS_FOLDER . '/' . Config::CAPTCHA_TEMP_NAME;
 
-        $dir_content = array_diff(scandir(CAPTCHAS_FOLDER), [
+        $dir_content = array_diff(scandir(Config::CAPTCHAS_FOLDER), [
             '..',
             '.',
-            GITKEEP_FILE,
-            CAPTCHA_TEMP_NAME,
+            Config::GITKEEP_FILE,
+            Config::CAPTCHA_TEMP_NAME,
         ]);
 
         $files_array = array_values($dir_content);
@@ -94,7 +96,7 @@ if ($mode === 'get_liked_photos') {
         $saved_captchas = [];
 
         foreach ($files_array as $file_key => $file) {
-            $saved_captchas[$file_key] = CAPTCHAS_FOLDER . '/' . $file;
+            $saved_captchas[$file_key] = Config::CAPTCHAS_FOLDER . '/' . $file;
         }
 
         foreach ($saved_captchas as $captcha_key => $captcha) {

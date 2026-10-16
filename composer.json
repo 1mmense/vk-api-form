@@ -1,0 +1,10 @@
+{
+    "name": "project/vk-api-form",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "require": {}
+}

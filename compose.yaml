@@ -1,0 +1,15 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: vk-api-form
+        user: "1000:1000"
+        ports:
+        - "80:80"
+        volumes:
+        - .:/var/www/html
+        - /mnt/i/xampp/htdocs/VkApiForm/files:/var/www/html/public/files
+        - "/mnt/i/Games/DARK\ SOULS\ REMASTERED/_TPUP/Assassin/Yiff-Flash\ Collection:/var/www/doneImages"
+        - "/mnt/i/xampp/htdocs/VkApiForm/files/doneVideos:/var/www/doneVideos"
+        restart: unless-stopped
