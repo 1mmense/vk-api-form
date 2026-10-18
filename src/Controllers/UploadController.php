@@ -27,12 +27,10 @@ class UploadController
     {
         $mode = $_REQUEST['mode'] ?? null;
 
-        if ($mode === 'get_files_from_folder') {
-            $this->getFilesFromFolder();
-        } elseif ($mode === 'save_photos') {
+        if ($mode === 'upload_photos') {
             $this->savePhotos();
-        } elseif ($mode === 'save_videos') {
-            $this->saveVideos();
+        } elseif ($mode === 'upload_videos') {
+            $this->uploadVideos();
         } elseif ($mode === 'get_all_photos') {
             $this->getAllPhotos();
         } elseif ($mode === 'get_all_videos') {
@@ -43,23 +41,6 @@ class UploadController
             http_response_code(400);
             echo json_encode(['error' => 'Invalid mode specified']);
         }
-    }
-
-    private function getFilesFromFolder(): void
-    {
-        $photos = $this->handler->getFilesFromFolder(true, true);
-        $offset = $_REQUEST['offset'] ?? 0;
-        $file   = $photos[$offset] ?? null;
-
-        if (empty($file)) {
-            echo json_encode(null);
-
-            return;
-        }
-
-        echo json_encode([
-            'file_path' => $file,
-        ]);
     }
 
     private function savePhotos(): void
@@ -76,7 +57,11 @@ class UploadController
             unset($fields['file_path']);
         }
 
-        $result = $this->photoHandler->savePhotoToAlbum($fields);
+        $result = $this->photoHandler->uploadImage(
+            extra_post_fields: $fields,
+            isRemoveAfterUpload: false,
+            isPostToWall: false
+        );
 
         if ($result['success']) {
             echo json_encode([
@@ -94,7 +79,7 @@ class UploadController
         ]);
     }
 
-    private function saveVideos(): void
+    private function uploadVideos(): void
     {
         $fields = [];
 
@@ -102,7 +87,11 @@ class UploadController
             $fields['file_path'] = $_REQUEST['file_path'];
         }
 
-        $result = $this->videoHandler->saveVideoToAlbum($fields);
+        $result = $this->videoHandler->uploadVideo(
+            extra_post_fields: $fields,
+            isRemoveAfterUpload: false,
+            isPostToWall: false
+        );
 
         if ($result['success']) {
             echo json_encode([
@@ -138,13 +127,8 @@ class UploadController
 
     private function getAllVideos(): void
     {
-        $this->videoHandler->cleanupOrphanThumbs();
-
-        $cmd = sprintf(
-            'nohup php %s > /dev/null 2>&1 &',
-            escapeshellarg(__DIR__ . '/../../generateThumbs.php')
-        );
-        exec($cmd);
+        $this->videoHandler->removeOrphanThumbs();
+        $this->videoHandler->startThumbGeneration();
 
         $videos = $this->handler->getFilesFromFolder(false, true);
         $result = [];
@@ -167,22 +151,7 @@ class UploadController
 
     private function getVideoThumbs(): void
     {
-        $this->videoHandler->cleanupOrphanThumbs();
-        $videos = $this->handler->getFilesFromFolder(false, true);
-        $result = [];
-
-        foreach ($videos as $videoPath) {
-            $pathinfo   = pathinfo($videoPath);
-            $thumb_path = Config::VIDEO_THUMBS_FOLDER . '/thumbnail_' . $pathinfo['filename'] . '.webp';
-
-            $result[] = [
-                'path'      => $videoPath,
-                'basename'  => basename($videoPath),
-                'thumbnail' => file_exists($thumb_path)
-                    ? str_replace('../', '', $thumb_path)
-                    : null,
-            ];
-        }
+        $result = $this->videoHandler->getVideoThumbs();
 
         echo json_encode($result);
     }

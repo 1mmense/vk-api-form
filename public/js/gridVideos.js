@@ -9,12 +9,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Set обеспечивает уникальность значений и быструю проверку через has().
     const thumbnailsReady = new Set();
 
-    /**
-     * Пытается загрузить превью для карточки.
-     * Если загрузка не удалась — удаляет путь из Set, чтобы следующий poll попробовал снова.
-     */
+    // Пытается загрузить превью для карточки.
+    // Если загрузка не удалась — удаляет путь из Set, чтобы следующий poll попробовал снова.
     function tryLoadThumb(img, videoPath, thumbnail) {
-
         img.onload = function () {
             // Только после успешной загрузки помечаем как готовое
             thumbnailsReady.add(videoPath);
@@ -25,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
             thumbnailsReady.delete(videoPath);
         };
 
-        img.src = thumbnail + '?t=' + Date.now();
+        img.src = thumbnail;
     }
 
     async function loadVideos() {
@@ -93,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const params = new URLSearchParams();
         params.append('file_path', card.dataset.path);
 
-        const response = await fetch('api.php?mode=save_videos', {
+        const response = await fetch('api.php?mode=upload_videos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: params.toString(),
@@ -131,21 +128,35 @@ document.addEventListener('DOMContentLoaded', function () {
         buttonPostVideos.classList.add('opacity-50', 'cursor-not-allowed');
 
         const cards = Array.from(gridVideos.querySelectorAll('.photo-card'));
+        const interval = window.APP_CONFIG.REQUEST_SLEEP_TIME_MS;
 
-        for (const card of cards) {
-            setCardStatus(card, 'loading');
+        // Создаем пул для задач с интервалом между стартами
+        const pool = new RequestPool(interval);
 
-            const result = await uploadVideo(card);
+        // Добавляем задачи в пул
+        const promises = cards.map(card => {
+            return pool.add(async () => {
+                // Вызываем loading в момент, когда задача стартовала
+                setCardStatus(card, 'loading');
 
-            if (result.success) {
-                setCardStatus(card, 'success');
-            } else {
-                console.error('Upload error for', card.dataset.path, result.error);
-                setCardStatus(card, 'error');
-            }
+                try {
+                    const result = await uploadVideo(card);
 
-            await new Promise(r => setTimeout(r, 300));
-        }
+                    if (result.success) {
+                        setCardStatus(card, 'success');
+                    } else {
+                        console.error('Upload error for', card.dataset.path, result.error);
+                        setCardStatus(card, 'error');
+                    }
+                } catch (error) {
+                    console.error('Upload exception for', card.dataset.path, error);
+                    setCardStatus(card, 'error');
+                }
+            });
+        });
+
+        // Ждем завершения всех задач
+        await Promise.all(promises);
 
         isPosting = false;
 

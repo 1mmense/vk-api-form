@@ -14,8 +14,11 @@ class VideoHandler extends Handler
         $this->vk_api = $vk_api;
     }
 
-    public function saveVideoToAlbum(array $extra_post_fields = []): array
-    {
+    public function uploadVideo(
+        array $extra_post_fields = [],
+        bool $isRemoveAfterUpload = true,
+        bool $isPostToWall = false
+    ): array {
         $result = ['success' => false, 'error' => null];
 
         $default_fields = [
@@ -89,22 +92,25 @@ class VideoHandler extends Handler
                 return $result;
             }
 
-            // Uncomment to post each video to the wall
-            // if (!empty($upload_result['video_id'])) {
-            //     $fields = [
-            //         'attachments' => 'video-' . $_ENV['GROUP_ID'] . '_' . $upload_result['video_id'],
-            //     ];
+            if ($isPostToWall
+                && !empty($upload_result['video_id'])
+            ) {
+                $wallPostFields = [
+                    'attachments' => 'video-' . $_ENV['GROUP_ID'] . '_' . $upload_result['video_id'],
+                ];
 
-            //     $wall_result = $this->vk_api->post($fields);
+                $wallResult = $this->vk_api->post($wallPostFields);
 
-            //     if (!empty($wall_result['error'])) {
-            //         $result['error'] = $wall_result['error'];
+                if (!empty($wallResult['error'])) {
+                    $result['error'] = $wallResult['error'];
 
-            //         return $result;
-            //     }
-            // }
+                    return $result;
+                }
+            }
 
-            if (file_exists($file_path)) {
+            if ($isRemoveAfterUpload
+                && file_exists($file_path)
+            ) {
                 $destination = Config::DONE_VIDEOS_FOLDER . '/' . $pathinfo['basename'];
 
                 if (!copy($file_path, $destination) || !file_exists($destination)) {
@@ -124,50 +130,19 @@ class VideoHandler extends Handler
 
             $result['success'] = true;
 
-            $this->cleanupOrphanThumbs();
+            $this->removeOrphanThumbs();
 
             return $result;
         }
     }
 
-    public function generateThumbnail(string $video_path): ?string
-    {
-        $pathinfo  = pathinfo($video_path);
-        $thumb_dir = Config::VIDEO_THUMBS_FOLDER;
-
-        if (!is_dir($thumb_dir)) {
-            mkdir($thumb_dir, 0777, true);
-        }
-
-        $thumb_name = 'thumbnail_' . $pathinfo['filename'] . '.webp';
-        $thumb_path = $thumb_dir . '/' . $thumb_name;
-
-        if (file_exists($thumb_path)) {
-            return $thumb_path;
-        }
-
-        $cmd = sprintf(
-            '/usr/bin/ffmpeg -i %s -vf "thumbnail=300,scale=240:-1" -frames:v 1 -c:v libwebp -quality 50 %s > /dev/null 2>&1',
-            escapeshellarg($video_path),
-            escapeshellarg($thumb_path)
-        );
-
-        exec($cmd, $output, $return_code);
-
-        if ($return_code !== 0 || !file_exists($thumb_path)) {
-            return null;
-        }
-
-        return $thumb_path;
-    }
-
-    public function cleanupOrphanThumbs(): int
+    public function removeOrphanThumbs(): void
     {
         $thumbsDir = Config::VIDEO_THUMBS_FOLDER;
         $videosDir = Config::UPLOAD_VIDEOS_FOLDER;
 
         if (!is_dir($thumbsDir) || !is_dir($videosDir)) {
-            return 0;
+            return;
         }
 
         $scanDir = function ($dirName) {
@@ -190,7 +165,6 @@ class VideoHandler extends Handler
         }
 
         // Проходим по превью и удаляем сиротские
-        $deleted    = 0;
         $thumbFiles = $scanDir($thumbsDir);
 
         foreach ($thumbFiles as $file) {
@@ -207,12 +181,42 @@ class VideoHandler extends Handler
 
                 if (file_exists($thumbPath)) {
                     unlink($thumbPath);
-
-                    $deleted++;
                 }
             }
         }
+    }
 
-        return $deleted;
+    // TODO: Рефакторинг
+    public function startThumbGeneration()
+    {
+        $cmd = sprintf(
+            'nohup php %s > /dev/null 2>&1 &',
+            escapeshellarg(__DIR__ . '/../../generateThumbs.php')
+        );
+
+        exec($cmd);
+    }
+
+    public function getVideoThumbs(): array
+    {
+        $this->removeOrphanThumbs();
+
+        $videos = $this->getFilesFromFolder(false, true);
+        $result = [];
+
+        foreach ($videos as $videoPath) {
+            $pathinfo   = pathinfo($videoPath);
+            $thumb_path = Config::VIDEO_THUMBS_FOLDER . '/thumbnail_' . $pathinfo['filename'] . '.webp';
+
+            $result[] = [
+                'path'      => $videoPath,
+                'basename'  => basename($videoPath),
+                'thumbnail' => file_exists($thumb_path)
+                    ? str_replace('../', '', $thumb_path)
+                    : null,
+            ];
+        }
+
+        return $result;
     }
 }

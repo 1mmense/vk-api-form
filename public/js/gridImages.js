@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
         params.append('file_path', card.dataset.path);
         params.append('is_post_all_photos', 'false');
 
-        const response = await fetch('api.php?mode=save_photos', {
+        const response = await fetch('api.php?mode=upload_photos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: params.toString(),
@@ -98,25 +98,40 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         isPosting = true;
+
         buttonPostAll.disabled = true;
         buttonPostAll.classList.add('opacity-50', 'cursor-not-allowed');
 
         const cards = Array.from(gridImages.querySelectorAll('.photo-card'));
+        const interval = window.APP_CONFIG.REQUEST_SLEEP_TIME_MS;
 
-        for (const card of cards) {
-            setCardStatus(card, 'loading');
+        // Создаем пул с интервалом между стартами
+        const pool = new RequestPool(interval);
 
-            const result = await uploadPhoto(card);
+        // Добавляем задачи в пул
+        const promises = cards.map(card => {
+            return pool.add(async () => {
+                // Вызываем loading в момент, когда задача стартовала
+                setCardStatus(card, 'loading');
 
-            if (result.success) {
-                setCardStatus(card, 'success');
-            } else {
-                console.error('Upload error for', card.dataset.path, result.error);
-                setCardStatus(card, 'error');
-            }
+                try {
+                    const result = await uploadPhoto(card);
 
-            await new Promise(r => setTimeout(r, 300));
-        }
+                    if (result.success) {
+                        setCardStatus(card, 'success');
+                    } else {
+                        console.error('Upload error for', card.dataset.path, result.error);
+                        setCardStatus(card, 'error');
+                    }
+                } catch (error) {
+                    console.error('Upload exception for', card.dataset.path, error);
+                    setCardStatus(card, 'error');
+                }
+            });
+        });
+
+        // Ждем завершения всех задач
+        await Promise.all(promises);
 
         isPosting = false;
         buttonPostAll.disabled = false;
@@ -128,5 +143,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     loadPhotos();
+
     buttonPostAll.addEventListener('click', postAllPhotos);
 });

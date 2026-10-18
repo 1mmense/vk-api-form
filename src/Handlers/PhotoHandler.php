@@ -37,8 +37,11 @@ class PhotoHandler extends Handler
         return $result;
     }
 
-    public function savePhotoToAlbum(array $extra_post_fields): array
-    {
+    public function uploadImage(
+        array $extra_post_fields,
+        bool $isRemoveAfterUpload = true,
+        bool $isPostToWall = true
+    ): array {
         $result = [
             'success' => false,
             'error'   => null,
@@ -138,19 +141,23 @@ class PhotoHandler extends Handler
                 return $result;
             }
 
-            $fields = [
-                'attachments' => 'photo-' . $_ENV['GROUP_ID'] . '_' . $saved_photo_data['id'],
-            ];
+            if ($isPostToWall) {
+                $wallPostFields = [
+                    'attachments' => 'photo-' . $_ENV['GROUP_ID'] . '_' . $saved_photo_data['id'],
+                ];
 
-            $wall_result = $this->vk_api->post($fields);
+                $wallResult = $this->vk_api->post($wallPostFields);
 
-            if (!empty($wall_result['error'])) {
-                $result['error'] = $wall_result['error'];
+                if (!empty($wallResult['error'])) {
+                    $result['error'] = $wallResult['error'];
 
-                return $result;
+                    return $result;
+                }
             }
 
-            if (file_exists($file_path)) {
+            if ($isRemoveAfterUpload
+                && file_exists($file_path)
+            ) {
                 $destination = Config::DONE_IMAGES_FOLDER . '/' . $pathinfo['basename'];
 
                 if (copy($file_path, $destination)

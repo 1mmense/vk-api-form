@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/vendor/autoload.php';
 
 use App\Support\Config;
@@ -62,6 +63,7 @@ foreach ($videos as $videoPath) {
                 proc_close($data['process']);
 
                 unset($processes[$path]);
+
                 $running--;
 
                 break;

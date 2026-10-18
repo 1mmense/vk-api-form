@@ -6,6 +6,7 @@ class Config
 {
     public const ENV_PATH = __DIR__ . '/../../.env';
 
+    public const REQUEST_SLEEP_TIME_MS       = 2500;
     public const API_VERSION                 = '5.131';
     public const URL_WALL_POST               = 'https://api.vk.ru/method/wall.post?';
     public const URL_PHOTOS_GET              = 'https://api.vk.ru/method/photos.get?';
