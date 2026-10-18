@@ -8,7 +8,7 @@ use App\Handlers\PhotoHandler;
 use App\Handlers\VideoHandler;
 use App\Support\Config;
 
-class UploadController
+class MainController
 {
     private VkApiService $vkApi;
     private Handler $handler;

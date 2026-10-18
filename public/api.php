@@ -6,12 +6,12 @@ header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Support\Config;
-use App\Controllers\UploadController;
+use App\Controllers\MainController;
 
 Config::loadEnv();
 
 try {
-    $controller = new UploadController();
+    $controller = new MainController();
     $controller->handleRequest();
 } catch (Throwable $e) {
     http_response_code(500);
