@@ -6,11 +6,11 @@ use App\Support\Config;
 
 class LikeHandler
 {
-    private VkApiService $vk_api;
+    private VkApiService $vkApi;
 
-    public function __construct(VkApiService $vk_api)
+    public function __construct(VkApiService $vkApi)
     {
-        $this->vk_api = $vk_api;
+        $this->vkApi = $vkApi;
     }
 
     public function getFavePhotos($params = [])
@@ -33,13 +33,13 @@ class LikeHandler
             $url_get_fave_photos .= '&offset=' . $params['offset'];
         }
 
-        $this->vk_api->post_data[CURLOPT_URL] = $url_get_fave_photos;
-        $this->vk_api->post_data[CURLOPT_POSTFIELDS] = [
-            'access_token' => $this->vk_api->post_fields['access_token'],
-            'v'            => $this->vk_api->post_fields['v'],
+        $this->vkApi->postData[CURLOPT_URL] = $url_get_fave_photos;
+        $this->vkApi->postData[CURLOPT_POSTFIELDS] = [
+            'access_token' => $this->vkApi->postFields['access_token'],
+            'v'            => $this->vkApi->postFields['v'],
         ];
 
-        $result = $this->vk_api->executePostQuery();
+        $result = $this->vkApi->executePostQuery();
 
         $items = $result['response']['items'] ?? null;
 
@@ -49,11 +49,11 @@ class LikeHandler
                     return $a['width'] < $b['width'];
                 });
 
-                $largest_size = reset($items[$item_key]['sizes']);
+                $largestSize = reset($items[$item_key]['sizes']);
 
                 unset($items[$item_key]['sizes']);
 
-                $items[$item_key]['url'] = $largest_size['url'];
+                $items[$item_key]['url'] = $largestSize['url'];
             }
         } else {
             fn_plog($result);
@@ -66,11 +66,11 @@ class LikeHandler
     {
         $is_success = true;
 
-        $this->vk_api->post_data[CURLOPT_URL] = Config::URL_LIKES_DELETE;
+        $this->vkApi->postData[CURLOPT_URL] = Config::URL_LIKES_DELETE;
 
-        $post_fields = [
-            'access_token' => $this->vk_api->post_fields['access_token'],
-            'v'            => $this->vk_api->post_fields['v'],
+        $postFields = [
+            'access_token' => $this->vkApi->postFields['access_token'],
+            'v'            => $this->vkApi->postFields['v'],
             'type'         => 'photo',
         ];
 
@@ -78,12 +78,12 @@ class LikeHandler
             $basename_full = basename($item['url']);
             $basename = substr($basename_full, 0, strpos($basename_full, '?')) ?? $basename_full;
 
-            $this->vk_api->post_data[CURLOPT_POSTFIELDS] = array_merge($post_fields, [
+            $this->vkApi->postData[CURLOPT_POSTFIELDS] = array_merge($postFields, [
                 'owner_id' => $item['owner_id'],
                 'item_id'  => $item['id'],
             ]);
 
-            $response = $this->vk_api->executePostQuery();
+            $response = $this->vkApi->executePostQuery();
 
             if (empty($response['error']['error_msg'])) {
                 $ch = curl_init($item['url']);

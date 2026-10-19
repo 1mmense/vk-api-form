@@ -32,11 +32,11 @@ if ($mode === 'get_liked_photos') {
     if (!empty($items)) {
         $is_success = true;
 
-        $vkApi->post_data[CURLOPT_URL] = Config::URL_LIKES_DELETE;
+        $vkApi->postData[CURLOPT_URL] = Config::URL_LIKES_DELETE;
 
-        $post_fields = [
-            'access_token' => $vkApi->post_fields['access_token'],
-            'v'            => $vkApi->post_fields['v'],
+        $postFields = [
+            'access_token' => $vkApi->postFields['access_token'],
+            'v'            => $vkApi->postFields['v'],
             'type'         => 'photo',
         ];
 
@@ -44,7 +44,7 @@ if ($mode === 'get_liked_photos') {
             $basename_full = basename($item['url']);
             $basename      = substr($basename_full, 0, strpos($basename_full, '?'));
 
-            $vkApi->post_data[CURLOPT_POSTFIELDS] = array_merge($post_fields, [
+            $vkApi->postData[CURLOPT_POSTFIELDS] = array_merge($postFields, [
                 'owner_id' => $item['owner_id'],
                 'item_id'  => $item['id'],
             ]);
@@ -52,7 +52,7 @@ if ($mode === 'get_liked_photos') {
             if (!empty($_REQUEST['captcha_sid'])
                 && !empty($_REQUEST['captcha_key'])
             ) {
-                $vkApi->post_data[CURLOPT_POSTFIELDS] = array_merge($vkApi->post_data[CURLOPT_POSTFIELDS], [
+                $vkApi->postData[CURLOPT_POSTFIELDS] = array_merge($vkApi->postData[CURLOPT_POSTFIELDS], [
                     'captcha_sid' => $_REQUEST['captcha_sid'],
                     'captcha_key' => $_REQUEST['captcha_key'],
                 ]);

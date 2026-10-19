@@ -7,11 +7,11 @@ use App\Classes\VkApiService;
 
 class PhotoHandler extends Handler
 {
-    protected VkApiService $vk_api;
+    protected VkApiService $vkApi;
 
-    public function __construct(VkApiService $vk_api)
+    public function __construct(VkApiService $vkApi)
     {
-        $this->vk_api = $vk_api;
+        $this->vkApi = $vkApi;
     }
 
     public function getPhotosUrls(array $photos): array
@@ -27,9 +27,9 @@ class PhotoHandler extends Handler
                 return $a['width'] < $b['width'];
             });
 
-            $largest_size = reset($photos[$key]['sizes']);
+            $largestSize = reset($photos[$key]['sizes']);
             unset($photos[$key]['sizes']);
-            $photos[$key]['url'] = $largest_size['url'];
+            $photos[$key]['url'] = $largestSize['url'];
         }
 
         $result = $photos;
@@ -38,7 +38,7 @@ class PhotoHandler extends Handler
     }
 
     public function uploadImage(
-        array $extra_post_fields,
+        array $extraPostFields,
         bool $isRemoveAfterUpload = true,
         bool $isPostToWall = true
     ): array {
@@ -47,61 +47,61 @@ class PhotoHandler extends Handler
             'error'   => null,
         ];
 
-        $default_fields = [
+        $defaultFields = [
             'group_id' => $_ENV['GROUP_ID'],
             'album_id' => $_ENV['ALBUM_ID'],
         ];
 
-        $extra_post_fields = array_merge($default_fields, $extra_post_fields);
+        $extraPostFields = array_merge($defaultFields, $extraPostFields);
 
-        if (empty($extra_post_fields['file_path'])) {
+        if (empty($extraPostFields['file_path'])) {
             $files = $this->getFilesFromFolder();
         } else {
-            $files = [$extra_post_fields['file_path']];
+            $files = [$extraPostFields['file_path']];
         }
 
-        if (empty($extra_post_fields) || empty($files)) {
+        if (empty($extraPostFields) || empty($files)) {
             return $result;
         }
 
-        $get_upload_server_fields = array_merge($this->vk_api->post_fields, [
-            'group_id' => $extra_post_fields['group_id'],
-            'album_id' => $extra_post_fields['album_id'],
+        $getUploadServerFields = array_merge($this->vkApi->postFields, [
+            'group_id' => $extraPostFields['group_id'],
+            'album_id' => $extraPostFields['album_id'],
         ]);
 
-        $this->vk_api->post_data[CURLOPT_URL]        = Config::URL_GET_PHOTO_UPLOAD_SERVER;
-        $this->vk_api->post_data[CURLOPT_POSTFIELDS] = $get_upload_server_fields;
+        $this->vkApi->postData[CURLOPT_URL]        = Config::URL_GET_PHOTO_UPLOAD_SERVER;
+        $this->vkApi->postData[CURLOPT_POSTFIELDS] = $getUploadServerFields;
 
-        $get_upload_url_result = $this->vk_api->executePostQuery();
-        $upload_url            = $get_upload_url_result['response']['upload_url'] ?? null;
+        $getUploadUrlResult = $this->vkApi->executePostQuery();
+        $uploadUrl            = $getUploadUrlResult['response']['upload_url'] ?? null;
 
-        if (empty($upload_url)) {
+        if (empty($uploadUrl)) {
             $result['error'] = 'upload_url is empty';
 
             return $result;
         }
 
-        foreach ($files as $file_key => $file_path) {
-            $this->vk_api->post_data[CURLOPT_URL]    = $upload_url;
-            $this->vk_api->post_data[CURLOPT_HEADER] = false;
+        foreach ($files as $fileKey => $filePath) {
+            $this->vkApi->postData[CURLOPT_URL]    = $uploadUrl;
+            $this->vkApi->postData[CURLOPT_HEADER] = false;
 
-            $pathinfo = pathinfo($file_path);
+            $pathinfo = pathinfo($filePath);
 
-            if (empty($file_path) || !file_exists($file_path)) {
-                $result['error'] = 'file not found: ' . $file_path;
+            if (empty($filePath) || !file_exists($filePath)) {
+                $result['error'] = 'file not found: ' . $filePath;
 
                 return $result;
             }
 
-            $this->vk_api->post_data[CURLOPT_POSTFIELDS] = [
+            $this->vkApi->postData[CURLOPT_POSTFIELDS] = [
                 'file1' => new \CURLFile(
-                    $file_path,
-                    mime_content_type($file_path),
+                    $filePath,
+                    mime_content_type($filePath),
                     $pathinfo['basename']
                 ),
             ];
 
-            $upload_result = $this->vk_api->executePostQuery();
+            $upload_result = $this->vkApi->executePostQuery();
             $server        = $upload_result['server'] ?? null;
             $photos_list   = $upload_result['photos_list'] ?? null;
             $album_id      = $upload_result['aid'] ?? null;
@@ -113,27 +113,27 @@ class PhotoHandler extends Handler
                 return $result;
             }
 
-            $this->vk_api->post_data[CURLOPT_URL] = Config::URL_PHOTOS_SAVE;
+            $this->vkApi->postData[CURLOPT_URL] = Config::URL_PHOTOS_SAVE;
 
-            $this->vk_api->post_data[CURLOPT_POSTFIELDS] = [
-                'access_token' => $this->vk_api->post_fields['access_token'],
-                'v'            => $this->vk_api->post_fields['v'],
-                'group_id'     => $extra_post_fields['group_id'],
+            $this->vkApi->postData[CURLOPT_POSTFIELDS] = [
+                'access_token' => $this->vkApi->postFields['access_token'],
+                'v'            => $this->vkApi->postFields['v'],
+                'group_id'     => $extraPostFields['group_id'],
                 'server'       => $server,
                 'photos_list'  => $photos_list,
                 'album_id'     => $album_id,
                 'hash'         => $hash,
             ];
 
-            $save_result = $this->vk_api->executePostQuery();
+            $saveResult = $this->vkApi->executePostQuery();
 
-            if (!empty($save_result['error'])) {
-                $result['error'] = $save_result['error'];
+            if (!empty($saveResult['error'])) {
+                $result['error'] = $saveResult['error'];
 
                 return $result;
             }
 
-            $saved_photo_data = reset($save_result['response']);
+            $saved_photo_data = reset($saveResult['response']);
 
             if (empty($saved_photo_data['id'])) {
                 $result['error'] = 'saved photo id is empty';
@@ -146,7 +146,7 @@ class PhotoHandler extends Handler
                     'attachments' => 'photo-' . $_ENV['GROUP_ID'] . '_' . $saved_photo_data['id'],
                 ];
 
-                $wallResult = $this->vk_api->postToWall($wallPostFields);
+                $wallResult = $this->vkApi->postToWall($wallPostFields);
 
                 if (!empty($wallResult['error'])) {
                     $result['error'] = $wallResult['error'];
@@ -156,14 +156,14 @@ class PhotoHandler extends Handler
             }
 
             if ($isRemoveAfterUpload
-                && file_exists($file_path)
+                && file_exists($filePath)
             ) {
                 $destination = Config::DONE_IMAGES_FOLDER . '/' . $pathinfo['basename'];
 
-                if (copy($file_path, $destination)
+                if (copy($filePath, $destination)
                     && file_exists($destination)
                 ) {
-                    unlink($file_path);
+                    unlink($filePath);
                 } else {
                     $result['error'] = 'failed to move file to done folder';
 

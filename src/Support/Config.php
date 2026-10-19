@@ -6,7 +6,7 @@ class Config
 {
     public const ENV_PATH = __DIR__ . '/../../.env';
 
-    public const REQUEST_SLEEP_TIME_MS       = 2500;
+    public const REQUEST_SLEEP_TIME_MS       = 2200;
     public const API_VERSION                 = '5.131';
     public const URL_WALL_POST               = 'https://api.vk.ru/method/wall.post?';
     public const URL_PHOTOS_GET              = 'https://api.vk.ru/method/photos.get?';
@@ -18,7 +18,7 @@ class Config
     public const URL_FAVE_GET                = 'https://api.vk.ru/method/fave.get?';
     public const FAVE_COUNT                  = 50;
     public const FAVE_OFFSET                 = 0;
-    public const SLEEP_TIME                  = '120000';
+    public const SLEEP_TIME                  = 120000;
 
     public const FILES_FOLDER      = 'files';
     public const CAPTCHAS_FOLDER   = 'files/captchas';

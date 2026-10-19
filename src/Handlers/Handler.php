@@ -6,24 +6,24 @@ use App\Support\Config;
 
 class Handler
 {
-    public function getFilesFromFolder($is_photos = true, $is_for_src = false)
+    public function getFilesFromFolder($isPhotos = true, $isForSrc = false)
     {
         $files = [];
 
-        $folder = $is_photos ? Config::UPLOAD_IMAGES_FOLDER : Config::UPLOAD_VIDEOS_FOLDER;
+        $folder = $isPhotos ? Config::UPLOAD_IMAGES_FOLDER : Config::UPLOAD_VIDEOS_FOLDER;
 
         if (!is_dir($folder)) {
             return $files;
         }
 
-        $dir_content = array_diff(scandir($folder), ['..', '.', Config::GITKEEP_FILE]);
-        $files_array = array_values($dir_content);
+        $dirContent = array_diff(scandir($folder), ['..', '.', Config::GITKEEP_FILE]);
+        $filesArray = array_values($dirContent);
 
-        foreach ($files_array as $file_key => $file) {
-            if ($is_for_src) {
-                $files[$file_key] = str_replace('../', '', $folder) . '/' . $file;
+        foreach ($filesArray as $fileKey => $file) {
+            if ($isForSrc) {
+                $files[$fileKey] = str_replace('../', '', $folder) . '/' . $file;
             } else {
-                $files[$file_key] = $folder . '/' . $file;
+                $files[$fileKey] = $folder . '/' . $file;
             }
         }
 

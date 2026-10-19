@@ -52,7 +52,7 @@ class MainController
         }
 
         $result = $this->photoHandler->uploadImage(
-            extra_post_fields: $fields,
+            extraPostFields: $fields,
             isRemoveAfterUpload: false,
             isPostToWall: false
         );
@@ -82,7 +82,7 @@ class MainController
         }
 
         $result = $this->videoHandler->uploadVideo(
-            extra_post_fields: $fields,
+            extraPostFields: $fields,
             isRemoveAfterUpload: false,
             isPostToWall: false
         );

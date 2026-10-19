@@ -6,12 +6,12 @@ use App\Support\Config;
 
 class VkApiService
 {
-    public $post_data = [];
-    public $post_fields = [];
+    public $postData = [];
+    public $postFields = [];
 
     public function __construct()
     {
-        $this->post_fields = [
+        $this->postFields = [
             'owner_id'     => $_ENV['OWNER_ID'],
             'from_group'   => true,
             'access_token' => $_ENV['TOKEN'],
@@ -19,7 +19,7 @@ class VkApiService
             'signed'       => 1,
         ];
 
-        $this->post_data = [
+        $this->postData = [
             CURLOPT_POST           => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_SSL_VERIFYPEER => false,
@@ -31,12 +31,12 @@ class VkApiService
     {
         $result = false;
 
-        if (empty($this->post_data)) {
+        if (empty($this->postData)) {
             return $result;
         }
 
         $ch = curl_init();
-        curl_setopt_array($ch, $this->post_data);
+        curl_setopt_array($ch, $this->postData);
         $query = curl_exec($ch);
         $result = json_decode($query, true);
 
@@ -45,32 +45,32 @@ class VkApiService
         return $result;
     }
 
-    public function postToWall($extra_post_fields)
+    public function postToWall($extraPostFields)
     {
         $result = false;
 
-        if (empty($extra_post_fields)) {
+        if (empty($extraPostFields)) {
             return $result;
         }
 
-        $this->post_data[CURLOPT_URL] = Config::URL_WALL_POST;
-        $this->post_data[CURLOPT_POSTFIELDS] = array_merge($this->post_fields, $extra_post_fields);
+        $this->postData[CURLOPT_URL] = Config::URL_WALL_POST;
+        $this->postData[CURLOPT_POSTFIELDS] = array_merge($this->postFields, $extraPostFields);
 
         $result = $this->executePostQuery();
 
         return $result;
     }
 
-    public function getAlbumPhotos($extra_post_fields)
+    public function getAlbumPhotos($extraPostFields)
     {
         $result = [];
 
-        if (empty($extra_post_fields)) {
+        if (empty($extraPostFields)) {
             return $result;
         }
 
-        $this->post_data[CURLOPT_URL] = Config::URL_PHOTOS_GET;
-        $this->post_data[CURLOPT_POSTFIELDS] = array_merge($this->post_fields, $extra_post_fields);
+        $this->postData[CURLOPT_URL] = Config::URL_PHOTOS_GET;
+        $this->postData[CURLOPT_POSTFIELDS] = array_merge($this->postFields, $extraPostFields);
 
         $result = $this->executePostQuery();
 
