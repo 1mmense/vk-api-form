@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const gridImages = document.getElementById('gridImages');
     const buttonPostAll = document.getElementById('buttonPostAll');
-    const template = document.getElementById('imageCardTemplate');
+    const template = document.getElementById('cardTemplate');
 
     let isPosting = false;
 
@@ -63,7 +63,6 @@ document.addEventListener('DOMContentLoaded', function () {
     async function uploadPhoto(card) {
         const params = new URLSearchParams();
         params.append('file_path', card.dataset.path);
-        params.append('is_post_all_photos', 'false');
 
         const response = await fetch('api.php?mode=upload_photos', {
             method: 'POST',
@@ -108,6 +107,9 @@ document.addEventListener('DOMContentLoaded', function () {
         // Создаем пул с интервалом между стартами
         const pool = new RequestPool(interval);
 
+        let done = 0;
+        const cardsToPost = cards.length;
+
         // Добавляем задачи в пул
         const promises = cards.map(card => {
             return pool.add(async () => {
@@ -127,6 +129,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.error('Upload exception for', card.dataset.path, error);
                     setCardStatus(card, 'error');
                 }
+
+                done++;
+                buttonPostAll.textContent = `Posting ${done}/${cardsToPost}...`;
             });
         });
 

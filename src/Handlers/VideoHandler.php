@@ -99,7 +99,7 @@ class VideoHandler extends Handler
                     'attachments' => 'video-' . $_ENV['GROUP_ID'] . '_' . $upload_result['video_id'],
                 ];
 
-                $wallResult = $this->vk_api->post($wallPostFields);
+                $wallResult = $this->vk_api->postToWall($wallPostFields);
 
                 if (!empty($wallResult['error'])) {
                     $result['error'] = $wallResult['error'];
@@ -121,7 +121,7 @@ class VideoHandler extends Handler
 
                 unlink($file_path);
 
-                $thumb_path = Config::VIDEO_THUMBS_FOLDER . '/' . $pathinfo['filename'] . '.jpg';
+                $thumb_path = Config::VIDEO_THUMBS_FOLDER . '/' . $pathinfo['filename'] . '.webp';
 
                 if (file_exists($thumb_path)) {
                     unlink($thumb_path);
@@ -191,7 +191,7 @@ class VideoHandler extends Handler
     {
         $cmd = sprintf(
             'nohup php %s > /dev/null 2>&1 &',
-            escapeshellarg(__DIR__ . '/../../generateThumbs.php')
+            escapeshellarg(__DIR__ . '/../../generate_thumbs.php')
         );
 
         exec($cmd);

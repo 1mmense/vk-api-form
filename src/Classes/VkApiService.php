@@ -45,7 +45,7 @@ class VkApiService
         return $result;
     }
 
-    public function post($extra_post_fields)
+    public function postToWall($extra_post_fields)
     {
         $result = false;
 

@@ -146,7 +146,7 @@ class PhotoHandler extends Handler
                     'attachments' => 'photo-' . $_ENV['GROUP_ID'] . '_' . $saved_photo_data['id'],
                 ];
 
-                $wallResult = $this->vk_api->post($wallPostFields);
+                $wallResult = $this->vk_api->postToWall($wallPostFields);
 
                 if (!empty($wallResult['error'])) {
                     $result['error'] = $wallResult['error'];

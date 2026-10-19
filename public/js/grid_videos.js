@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const gridVideos = document.getElementById('gridVideos');
     const buttonPostVideos = document.getElementById('buttonPostVideos');
-    const template = document.getElementById('imageCardTemplate');
+    const template = document.getElementById('cardTemplate');
 
     let isPosting = false;
 
@@ -38,8 +38,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            const cardsByPath = new Map(
+                Array.from(gridVideos.querySelectorAll('.photo-card'))
+                    .map(card => [card.dataset.path, card])
+            );
+
             videos.forEach(video => {
                 const card = template.content.cloneNode(true).querySelector('.photo-card');
+                // const card = cardsByPath.get(video.path);
                 card.dataset.path = video.path;
 
                 const img = card.querySelector('.card-image');
@@ -133,6 +139,9 @@ document.addEventListener('DOMContentLoaded', function () {
         // Создаем пул для задач с интервалом между стартами
         const pool = new RequestPool(interval);
 
+        let done = 0;
+        const cardsToPost = cards.length;
+
         // Добавляем задачи в пул
         const promises = cards.map(card => {
             return pool.add(async () => {
@@ -152,6 +161,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.error('Upload exception for', card.dataset.path, error);
                     setCardStatus(card, 'error');
                 }
+
+                done++;
+                buttonPostAll.textContent = `Posting ${done}/${cardsToPost}...`;
             });
         });
 
@@ -171,6 +183,10 @@ document.addEventListener('DOMContentLoaded', function () {
     let pollTimer = null;
 
     async function pollThumbs() {
+        if (isPosting) {
+            return
+        };
+
         try {
             const response = await fetch('api.php?mode=get_video_thumbs');
             const videos = await response.json();

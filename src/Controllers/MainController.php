@@ -51,12 +51,6 @@ class MainController
             $fields['file_path'] = $_REQUEST['file_path'];
         }
 
-        if (!empty($_REQUEST['is_post_all_photos'])
-            && ($_REQUEST['is_post_all_photos'] === true || $_REQUEST['is_post_all_photos'] === 'true')
-        ) {
-            unset($fields['file_path']);
-        }
-
         $result = $this->photoHandler->uploadImage(
             extra_post_fields: $fields,
             isRemoveAfterUpload: false,
