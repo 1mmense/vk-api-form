@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Classes;
 
@@ -22,8 +23,8 @@ class VkApiService
         $this->postData = [
             CURLOPT_POST           => true,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
         ];
     }
 

@@ -1,11 +1,11 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Controllers;
 
 use App\Classes\VkApiService;
 use App\Handlers\Handler;
 use App\Handlers\PhotoHandler;
-use App\Support\Config;
 
 class ImagesController
 {

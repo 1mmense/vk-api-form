@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Routing;
 
@@ -30,18 +31,24 @@ class Router
             return;
         }
 
+        if ($mode === null) {
+            http_response_code(400);
+            echo json_encode(['error' => 'mode is required']);
+            return;
+        }
+
         // 2. Ищем mode в карте для этого метода
         $route = $this->routes[$httpRequestMethod][$mode] ?? null;
 
         if ($route === null) {
             http_response_code(404);
-            echo json_encode(['error' => "Route '{$this->routes[$httpRequestMethod]}/{$mode}' not found"]);
+            echo json_encode(['error' => "Route '{$httpRequestMethod}/{$mode}' not found"]);
 
             return;
         }
 
         // 3. Создаём контроллер и вызываем метод
-        [$controllerClass, $httpRequestMethod] = $route;
+        [$controllerClass, $methodName] = $route;
 
         // if (!class_exists($controllerClass)) {
         //     http_response_code(500);
@@ -50,14 +57,14 @@ class Router
         //     return;
         // }
 
-        // if (!method_exists($controllerClass, $httpRequestMethod)) {
+        // if (!method_exists($controllerClass, $methodName)) {
         //     http_response_code(500);
-        //     echo json_encode(['error' => "Method '{$httpRequestMethod}' not found in class '{$controllerClass}'"]);
+        //     echo json_encode(['error' => "Method '{$methodName}' not found in class '{$controllerClass}'"]);
 
         //     return;
         // }
 
         $controller = new $controllerClass();
-        $controller->$httpRequestMethod();
+        $controller->$methodName();
     }
 }
