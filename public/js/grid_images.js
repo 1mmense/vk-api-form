@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     const gridImages = document.getElementById('gridImages');
-    const buttonPostAll = document.getElementById('buttonPostAll');
+    const buttonUploadImages = document.getElementById('buttonUploadImages');
     const template = document.getElementById('cardTemplate');
 
     let isPosting = false;
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             photos.forEach(photo => {
-                const card = template.content.cloneNode(true).querySelector('.photo-card');
+                const card = template.content.cloneNode(true).querySelector('.card-template');
                 card.dataset.path = photo.path;
 
                 const img = card.querySelector('.card-image');
@@ -61,13 +61,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function uploadPhoto(card) {
-        const params = new URLSearchParams();
-        params.append('file_path', card.dataset.path);
+        const form = document.getElementById('optionsForm');
+        const formData = new FormData(form);
 
-        const response = await fetch('api.php?mode=upload_photos', {
+        formData.append('filePath', card.dataset.path);
+
+        const response = await fetch('api.php?mode=upload_images', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: params.toString(),
+            body: formData,
         });
 
         let data = null;
@@ -98,10 +99,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         isPosting = true;
 
-        buttonPostAll.disabled = true;
-        buttonPostAll.classList.add('opacity-50', 'cursor-not-allowed');
+        buttonUploadImages.disabled = true;
+        buttonUploadImages.classList.add('opacity-50', 'cursor-not-allowed');
 
-        const cards = Array.from(gridImages.querySelectorAll('.photo-card'));
+        const cards = Array.from(gridImages.querySelectorAll('.card-template'));
         const interval = window.APP_CONFIG.REQUEST_SLEEP_TIME_MS;
 
         // Создаем пул с интервалом между стартами
@@ -110,9 +111,13 @@ document.addEventListener('DOMContentLoaded', function () {
         let done = 0;
         const cardsToPost = cards.length;
 
+        const buttonText = buttonUploadImages.textContent;
+        buttonUploadImages.textContent = `Posting ${done}/${cardsToPost}...`;
+
         // Добавляем задачи в пул
         const promises = cards.map(card => {
             return pool.add(async () => {
+
                 // Вызываем loading в момент, когда задача стартовала
                 setCardStatus(card, 'loading');
 
@@ -131,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 done++;
-                buttonPostAll.textContent = `Posting ${done}/${cardsToPost}...`;
+                buttonUploadImages.textContent = `Posting ${done}/${cardsToPost}...`;
             });
         });
 
@@ -139,15 +144,17 @@ document.addEventListener('DOMContentLoaded', function () {
         await Promise.all(promises);
 
         isPosting = false;
-        buttonPostAll.disabled = false;
-        buttonPostAll.classList.remove('opacity-50', 'cursor-not-allowed');
+        buttonUploadImages.disabled = false;
+        buttonUploadImages.classList.remove('opacity-50', 'cursor-not-allowed');
 
-        if (gridImages.querySelectorAll('.photo-card').length === 0) {
+        if (gridImages.querySelectorAll('.card-template').length === 0) {
             gridImages.innerHTML = '<p class="col-span-full text-center text-green-400 py-8">All photos posted successfully!</p>';
         }
+
+        buttonUploadImages.textContent = buttonText;
     }
 
     loadPhotos();
 
-    buttonPostAll.addEventListener('click', postAllPhotos);
+    buttonUploadImages.addEventListener('click', postAllPhotos);
 });

@@ -14,129 +14,119 @@ class VideoHandler extends Handler
         $this->vkApi = $vkApi;
     }
 
-    public function uploadVideo(
-        array $extraPostFields = [],
-        bool $isRemoveAfterUpload = true,
-        bool $isPostToWall = false
-    ): array {
+    public function uploadVideo(array $params = []): array
+    {
         $result = [
             'success' => false,
             'error'   => null
         ];
 
-        $defaultFields = [
-            'group_id' => $_ENV['GROUP_ID'],
-            'album_id' => $_ENV['ALBUM_ID']
+        $isMoveAfterUpload = (bool) $params['isMoveAfterUpload'] ?? false;
+        $isPostToWall      = (bool) $params['isPostVideosToWall'] ?? false;
+        $filePath          = (string) $params['filePath'] ?? '';
+
+        if (empty($filePath) || !file_exists($filePath)) {
+            $result['error'] = 'No such file found: ' . $filePath;
+
+            return $result;
+        }
+
+        $extraPostFields = [
+            'group_id'  => $_ENV['GROUP_ID'],
+            'album_id'  => $_ENV['ALBUM_ID'],
+            'file_path' => $filePath
         ];
 
-        $extraPostFields = array_merge($defaultFields, $extraPostFields);
+        $pathinfo = pathinfo($filePath);
 
-        if (empty($extraPostFields['file_path'])) {
-            $files = $this->getFilesFromFolder(false);
-        } else {
-            $files = [$extraPostFields['file_path']];
-        }
+        $this->vkApi->postData[CURLOPT_POSTFIELDS] = array_merge($this->vkApi->postFields, [
+            'group_id'    => $extraPostFields['group_id'],
+            'repeat'      => 1,
+            'no_comments' => 0,
+            'name'        => $pathinfo['basename'],
+        ]);
 
-        if (empty($files)) {
-            $result['error'] = 'no files to upload';
+        $this->vkApi->postData[CURLOPT_URL] = Config::URL_VIDEOS_SAVE;
+
+        $getUploadUrlResult = $this->vkApi->executePostQuery();
+
+        if (!empty($getUploadUrlResult['error'])) {
+            $result['error'] = $getUploadUrlResult['error'];
 
             return $result;
         }
 
-        foreach ($files as $fileKey => $filePath) {
-            $pathinfo = pathinfo($filePath);
+        $uploadUrl = $getUploadUrlResult['response']['upload_url'] ?? null;
 
-            $this->vkApi->postData[CURLOPT_POSTFIELDS] = array_merge($this->vkApi->postFields, [
-                'group_id'    => $extraPostFields['group_id'],
-                'repeat'      => 1,
-                'no_comments' => 0,
-                'name'        => $pathinfo['basename'],
-            ]);
+        if (empty($uploadUrl)) {
+            $result['error'] = 'upload_url is empty';
 
-            $this->vkApi->postData[CURLOPT_URL] = Config::URL_VIDEOS_SAVE;
+            return $result;
+        }
 
-            $getUploadUrlResult = $this->vkApi->executePostQuery();
+        $this->vkApi->postData[CURLOPT_URL] = $uploadUrl;
 
-            if (!empty($getUploadUrlResult['error'])) {
-                $result['error'] = $getUploadUrlResult['error'];
+        $this->vkApi->postData[CURLOPT_POSTFIELDS] = [
+            'video_file' => new \CURLFile(
+                $filePath,
+                mime_content_type($filePath),
+                $pathinfo['basename']
+            ),
+        ];
 
-                return $result;
-            }
+        $uploadResult = $this->vkApi->executePostQuery();
 
-            $uploadUrl = $getUploadUrlResult['response']['upload_url'] ?? null;
+        if (!empty($uploadResult['error'])) {
+            $result['error'] = $uploadResult['error'];
 
-            if (empty($uploadUrl)) {
-                $result['error'] = 'upload_url is empty';
+            return $result;
+        }
 
-                return $result;
-            }
+        if (empty($uploadResult['size'])) {
+            $result['error'] = 'upload result has no size field';
 
-            $this->vkApi->postData[CURLOPT_URL] = $uploadUrl;
+            return $result;
+        }
 
-            $this->vkApi->postData[CURLOPT_POSTFIELDS] = [
-                'video_file' => new \CURLFile(
-                    $filePath,
-                    mime_content_type($filePath),
-                    $pathinfo['basename']
-                ),
+        if ($isPostToWall
+            && !empty($uploadResult['video_id'])
+        ) {
+            $wallPostFields = [
+                'attachments' => 'video-' . $_ENV['GROUP_ID'] . '_' . $uploadResult['video_id'],
             ];
 
-            $uploadResult = $this->vkApi->executePostQuery();
+            $wallPostResult = $this->vkApi->postToWall($wallPostFields);
 
-            if (!empty($uploadResult['error'])) {
-                $result['error'] = $uploadResult['error'];
+            if (!empty($wallPostResult['error'])) {
+                $result['error'] = $wallPostResult['error'];
+
+                return $result;
+            }
+        }
+
+        if ($isMoveAfterUpload) {
+            $destination = Config::DONE_VIDEOS_FOLDER . '/' . $pathinfo['basename'];
+
+            if (!copy($filePath, $destination) || !file_exists($destination)) {
+                $result['error'] = 'failed to move file to done folder';
 
                 return $result;
             }
 
-            if (empty($uploadResult['size'])) {
-                $result['error'] = 'upload result has no size field';
+            unlink($filePath);
 
-                return $result;
+            $thumbPath = Config::VIDEO_THUMBS_FOLDER . '/' . $pathinfo['filename'] . '.webp';
+
+            if (file_exists($thumbPath)) {
+                unlink($thumbPath);
             }
-
-            if ($isPostToWall
-                && !empty($uploadResult['video_id'])
-            ) {
-                $wallPostFields = [
-                    'attachments' => 'video-' . $_ENV['GROUP_ID'] . '_' . $uploadResult['video_id'],
-                ];
-
-                $wallPostResult = $this->vkApi->postToWall($wallPostFields);
-
-                if (!empty($wallPostResult['error'])) {
-                    $result['error'] = $wallPostResult['error'];
-
-                    return $result;
-                }
-            }
-
-            if ($isRemoveAfterUpload
-                && file_exists($filePath)
-            ) {
-                $destination = Config::DONE_VIDEOS_FOLDER . '/' . $pathinfo['basename'];
-
-                if (!copy($filePath, $destination) || !file_exists($destination)) {
-                    $result['error'] = 'failed to move file to done folder';
-
-                    return $result;
-                }
-
-                unlink($filePath);
-
-                $thumbPath = Config::VIDEO_THUMBS_FOLDER . '/' . $pathinfo['filename'] . '.webp';
-
-                if (file_exists($thumbPath)) {
-                    unlink($thumbPath);
-                }
-            }
-
-            $result['success'] = true;
 
             $this->removeOrphanThumbs();
-
-            return $result;
         }
+
+        $result['success'] = true;
+
+        return $result;
     }
 
     public function removeOrphanThumbs(): void
@@ -208,7 +198,7 @@ class VideoHandler extends Handler
         $result = [];
 
         foreach ($videos as $videoPath) {
-            $pathinfo   = pathinfo($videoPath);
+            $pathinfo  = pathinfo($videoPath);
             $thumbPath = Config::VIDEO_THUMBS_FOLDER . '/thumbnail_' . $pathinfo['filename'] . '.webp';
 
             $result[] = [

@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', function () {
     const gridVideos = document.getElementById('gridVideos');
-    const buttonPostVideos = document.getElementById('buttonPostVideos');
+    const buttonUploadVideos = document.getElementById('buttonUploadVideos');
     const template = document.getElementById('cardTemplate');
+    const pollingInterval = 5000;
 
     let isPosting = false;
 
@@ -38,14 +39,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            const cardsByPath = new Map(
-                Array.from(gridVideos.querySelectorAll('.photo-card'))
-                    .map(card => [card.dataset.path, card])
-            );
-
             videos.forEach(video => {
-                const card = template.content.cloneNode(true).querySelector('.photo-card');
-                // const card = cardsByPath.get(video.path);
+                const card = template.content.cloneNode(true).querySelector('.card-template');
                 card.dataset.path = video.path;
 
                 const img = card.querySelector('.card-image');
@@ -93,13 +88,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function uploadVideo(card) {
-        const params = new URLSearchParams();
-        params.append('file_path', card.dataset.path);
+        const form = document.getElementById('optionsForm');
+        const formData = new FormData(form);
+
+        formData.append('filePath', card.dataset.path);
 
         const response = await fetch('api.php?mode=upload_videos', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: params.toString(),
+            body: formData,
         });
 
         let data = null;
@@ -130,10 +126,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         isPosting = true;
 
-        buttonPostVideos.disabled = true;
-        buttonPostVideos.classList.add('opacity-50', 'cursor-not-allowed');
+        buttonUploadVideos.disabled = true;
+        buttonUploadVideos.classList.add('opacity-50', 'cursor-not-allowed');
 
-        const cards = Array.from(gridVideos.querySelectorAll('.photo-card'));
+        const cards = Array.from(gridVideos.querySelectorAll('.card-template'));
         const interval = window.APP_CONFIG.REQUEST_SLEEP_TIME_MS;
 
         // Создаем пул для задач с интервалом между стартами
@@ -141,6 +137,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         let done = 0;
         const cardsToPost = cards.length;
+
+        const buttonText = buttonUploadImages.textContent;
+        buttonUploadVideos.textContent = `Posting ${done}/${cardsToPost}...`;
 
         // Добавляем задачи в пул
         const promises = cards.map(card => {
@@ -163,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 done++;
-                buttonPostAll.textContent = `Posting ${done}/${cardsToPost}...`;
+                buttonUploadVideos.textContent = `Posting ${done}/${cardsToPost}...`;
             });
         });
 
@@ -172,12 +171,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         isPosting = false;
 
-        buttonPostVideos.disabled = false;
-        buttonPostVideos.classList.remove('opacity-50', 'cursor-not-allowed');
+        buttonUploadVideos.disabled = false;
+        buttonUploadVideos.classList.remove('opacity-50', 'cursor-not-allowed');
 
-        if (gridVideos.querySelectorAll('.photo-card').length === 0) {
+        if (gridVideos.querySelectorAll('.card-template').length === 0) {
             gridVideos.innerHTML = '<p class="col-span-full text-center text-green-400 py-8">All videos posted successfully!</p>';
         }
+
+        buttonUploadVideos.textContent = buttonText;
     }
 
     let pollTimer = null;
@@ -191,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const response = await fetch('api.php?mode=get_video_thumbs');
             const videos = await response.json();
 
-            const cards = Array.from(gridVideos.querySelectorAll('.photo-card'));
+            const cards = Array.from(gridVideos.querySelectorAll('.card-template'));
 
             videos.forEach(video => {
                 const card = cards.find(c => c.dataset.path === video.path);
@@ -209,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             // Останавливаем polling только когда у ВСЕХ карточек в DOM есть превью
-            const allCardsHaveThumb = Array.from(gridVideos.querySelectorAll('.photo-card'))
+            const allCardsHaveThumb = Array.from(gridVideos.querySelectorAll('.card-template'))
                 .every(card => thumbnailsReady.has(card.dataset.path));
 
             if (allCardsHaveThumb) {
@@ -225,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        pollTimer = setInterval(pollThumbs, 1500);
+        pollTimer = setInterval(pollThumbs, pollingInterval);
     }
 
     function stopPolling() {
@@ -237,13 +238,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     loadVideos().then(() => {
         // Запускаем polling только если есть видео без превью
-        const hasMissing = Array.from(gridVideos.querySelectorAll('.photo-card'))
+        const hasMissing = Array.from(gridVideos.querySelectorAll('.card-template'))
             .some(card => !thumbnailsReady.has(card.dataset.path));
 
         if (hasMissing) {
+            // pollThumbs();
             startPolling();
         }
     });
 
-    buttonPostVideos.addEventListener('click', postAllVideos);
+    buttonUploadVideos.addEventListener('click', postAllVideos);
 });
