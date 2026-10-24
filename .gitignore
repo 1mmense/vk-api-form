@@ -17,3 +17,7 @@ thumbs.lock
 .vscode/
 *.swp
 .DS_Store
+node_modules/
+package-lock.json
+package.json
+public/css/tailwind/tailwind.css

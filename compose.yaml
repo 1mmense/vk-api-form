@@ -4,7 +4,6 @@ services:
             context: .
             dockerfile: Dockerfile
         container_name: vk-api-form
-        user: "1000:1000"
         ports:
         - "80:80"
         volumes:
@@ -13,3 +12,12 @@ services:
         - "/mnt/i/Games/DARK\ SOULS\ REMASTERED/_TPUP/Assassin/Yiff-Flash\ Collection:/var/www/doneImages"
         - "/mnt/i/xampp/htdocs/VkApiForm/files/doneVideos:/var/www/doneVideos"
         restart: unless-stopped
+    tailwind:
+        image: node:22-alpine
+        working_dir: /var/www/html
+        volumes:
+        - .:/var/www/html
+        tty: true
+        command: >
+            sh -c "npm install tailwindcss @tailwindcss/cli
+            && npx @tailwindcss/cli -i ./public/css/tailwind/input.css -o ./public/css/tailwind/tailwind.css --watch"
