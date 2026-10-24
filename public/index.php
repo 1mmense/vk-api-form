@@ -119,6 +119,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
                                         id="isPostImagesToWall"
                                         name="isPostImagesToWall"
                                         type="checkbox"
+                                        checked
                                         class="peer sr-only"
                                     />
 
@@ -165,6 +166,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
                                         id="isMoveImagesAfterUpload"
                                         name="isMoveImagesAfterUpload"
                                         type="checkbox"
+                                        checked
                                         class="peer sr-only"
                                     />
 
@@ -264,6 +266,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
                                         id="isMoveVideosAfterUpload"
                                         name="isMoveVideosAfterUpload"
                                         type="checkbox"
+                                        checked
                                         class="peer sr-only"
                                     />
 
