@@ -1,35 +1,32 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Classes\VkApiService;
 use App\Handlers\Handler;
-use App\Handlers\PhotoHandler;
+use App\Handlers\ImageHandler;
+use App\Support\Config;
+use App\Support\FileStorage;
 
 class ImagesController
 {
-    private VkApiService $vkApi;
-    private Handler $handler;
-    private PhotoHandler $photoHandler;
-
-    public function __construct()
-    {
-        $this->vkApi        = new VkApiService();
-        $this->handler      = new Handler($this->vkApi);
-        $this->photoHandler = new PhotoHandler($this->vkApi);
+    public function __construct(
+        private ImageHandler $imageHandler,
+        private FileStorage $fileStorage
+    ) {
     }
 
     public function index(): void
     {
-        $photos = $this->handler->getFilesFromFolder(true, true);
+        $images = $this->fileStorage->listUrls(Config::UPLOAD_IMAGES_FOLDER);
 
         $result = [];
 
-        foreach ($photos as $photoPath) {
+        foreach ($images as $imagePath) {
             $result[] = [
-                'path'     => $photoPath,
-                'basename' => basename($photoPath),
+                'path'     => $imagePath,
+                'basename' => basename($imagePath),
             ];
         }
 
@@ -55,7 +52,7 @@ class ImagesController
             return;
         }
 
-        $result = $this->photoHandler->uploadImage(params: $params);
+        $result = $this->imageHandler->uploadImage(params: $params);
 
         if ($result['success']) {
             echo json_encode([

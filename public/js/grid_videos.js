@@ -76,14 +76,24 @@ document.addEventListener('DOMContentLoaded', function () {
         if (status === 'loading') {
             statusEl.classList.remove('opacity-0');
             spinner.classList.remove('hidden');
+
+            return Promise.resolve();
         } else if (status === 'success') {
             statusEl.classList.remove('opacity-0');
             success.classList.remove('hidden');
-            // setTimeout(() => card.remove(), 1000);
+
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    card.remove();
+                    resolve();
+                }, 2000);
+            });
         } else if (status === 'error') {
             statusEl.classList.remove('opacity-0');
             error.classList.remove('hidden');
             setTimeout(() => statusEl.classList.add('opacity-0'), 3000);
+
+            return Promise.resolve();
         }
     }
 
@@ -151,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const result = await uploadVideo(card);
 
                     if (result.success) {
-                        setCardStatus(card, 'success');
+                        await setCardStatus(card, 'success');
                     } else {
                         console.error('Upload error for', card.dataset.path, result.error);
                         setCardStatus(card, 'error');
@@ -191,11 +201,10 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const response = await fetch('api.php?mode=get_video_thumbs');
             const videos = await response.json();
-
             const cards = Array.from(gridVideos.querySelectorAll('.card-template'));
 
             videos.forEach(video => {
-                const card = cards.find(c => c.dataset.path === video.path);
+                const card = cards.find(card => card.dataset.path === video.path);
 
                 if (!card) {
                     return;

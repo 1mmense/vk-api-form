@@ -1,18 +1,20 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Handlers;
 
 use App\Support\Config;
 use App\Classes\VkApiService;
+use App\Support\FileStorage;
+use App\Support\Functions;
 
-class VideoHandler extends Handler
+class VideoHandler
 {
-    protected VkApiService $vkApi;
-
-    public function __construct(VkApiService $vkApi)
-    {
-        $this->vkApi = $vkApi;
+    public function __construct(
+        private VkApiService $vkApi,
+        private FileStorage $fileStorage,
+    ) {
     }
 
     public function uploadVideo(array $params = []): array
@@ -116,10 +118,10 @@ class VideoHandler extends Handler
 
             unlink($filePath);
 
-            $thumbPath = Config::VIDEO_THUMBS_FOLDER . '/' . $pathinfo['filename'] . '.webp';
+            $thumbFile = $this->fileStorage->getThumbFile($pathinfo['filename']);
 
-            if (file_exists($thumbPath)) {
-                unlink($thumbPath);
+            if (file_exists($thumbFile)) {
+                unlink($thumbFile);
             }
 
             $this->removeOrphanThumbs();
@@ -132,8 +134,8 @@ class VideoHandler extends Handler
 
     public function removeOrphanThumbs(): void
     {
-        $thumbsDir = Config::VIDEO_THUMBS_FOLDER;
-        $videosDir = Config::UPLOAD_VIDEOS_FOLDER;
+        $thumbsDir = Config::basePath() . '/' . Config::FILES_FOLDER . '/' . Config::VIDEO_THUMBS_FOLDER;
+        $videosDir = Config::basePath() . '/' . Config::FILES_FOLDER . '/' . Config::UPLOAD_VIDEOS_FOLDER;
 
         if (!is_dir($thumbsDir) || !is_dir($videosDir)) {
             return;
@@ -171,10 +173,10 @@ class VideoHandler extends Handler
             $baseName = pathinfo($baseName, PATHINFO_FILENAME);
 
             if (!isset($videoNames[$baseName])) {
-                $thumbPath = $thumbsDir . '/' . $file;
+                $thumbFile = $thumbsDir . '/' . $file;
 
-                if (file_exists($thumbPath)) {
-                    unlink($thumbPath);
+                if (file_exists($thumbFile)) {
+                    unlink($thumbFile);
                 }
             }
         }
@@ -195,19 +197,19 @@ class VideoHandler extends Handler
     {
         $this->removeOrphanThumbs();
 
-        $videos = $this->getFilesFromFolder(false, true);
+        $videos = $this->fileStorage->listUrls(Config::UPLOAD_VIDEOS_FOLDER);
+
         $result = [];
 
         foreach ($videos as $videoPath) {
             $pathinfo  = pathinfo($videoPath);
-            $thumbPath = Config::VIDEO_THUMBS_FOLDER . '/thumbnail_' . $pathinfo['filename'] . '.webp';
+            $thumbFile = $this->fileStorage->getThumbFile($pathinfo['filename']);
+            $thumbUrl  = $this->fileStorage->getThumbUrl($pathinfo['filename']);
 
             $result[] = [
                 'path'      => $videoPath,
                 'basename'  => basename($videoPath),
-                'thumbnail' => file_exists($thumbPath)
-                    ? str_replace('../', '', $thumbPath)
-                    : null,
+                'thumbnail' => file_exists($thumbFile) ? $thumbUrl : null,
             ];
         }
 

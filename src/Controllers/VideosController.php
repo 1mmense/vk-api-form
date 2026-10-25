@@ -1,24 +1,20 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Classes\VkApiService;
-use App\Handlers\Handler;
 use App\Handlers\VideoHandler;
 use App\Support\Config;
+use App\Support\FileStorage;
+use App\Support\Functions;
 
 class VideosController
 {
-    private VkApiService $vkApi;
-    private Handler $handler;
-    private VideoHandler $videoHandler;
-
-    public function __construct()
-    {
-        $this->vkApi        = new VkApiService();
-        $this->handler      = new Handler($this->vkApi);
-        $this->videoHandler = new VideoHandler($this->vkApi);
+    public function __construct(
+        private VideoHandler $videoHandler,
+        private FileStorage $fileStorage
+    ) {
     }
 
     public function index(): void
@@ -26,19 +22,19 @@ class VideosController
         $this->videoHandler->removeOrphanThumbs();
         $this->videoHandler->startThumbGeneration();
 
-        $videos = $this->handler->getFilesFromFolder(false, true);
+        $videos = $this->fileStorage->listUrls(Config::UPLOAD_VIDEOS_FOLDER);
+
         $result = [];
 
         foreach ($videos as $videoPath) {
-            $pathinfo   = pathinfo($videoPath);
-            $thumb_path = Config::VIDEO_THUMBS_FOLDER . '/thumbnail_' . $pathinfo['filename'] . '.webp';
+            $pathinfo  = pathinfo($videoPath);
+            $thumbFile = $this->fileStorage->getThumbFile($pathinfo['filename']);
+            $thumbUrl  = $this->fileStorage->getThumbUrl($pathinfo['filename']);
 
             $result[] = [
                 'path'      => $videoPath,
                 'basename'  => basename($videoPath),
-                'thumbnail' => file_exists($thumb_path)
-                    ? str_replace('../', '', $thumb_path)
-                    : null,
+                'thumbnail' => file_exists($thumbFile) ? $thumbUrl : null,
             ];
         }
 

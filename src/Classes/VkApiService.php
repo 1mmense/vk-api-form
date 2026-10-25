@@ -41,8 +41,6 @@ class VkApiService
         $query = curl_exec($ch);
         $result = json_decode($query, true);
 
-        usleep(Config::SLEEP_TIME);
-
         return $result;
     }
 
@@ -55,22 +53,6 @@ class VkApiService
         }
 
         $this->postData[CURLOPT_URL] = Config::URL_WALL_POST;
-        $this->postData[CURLOPT_POSTFIELDS] = array_merge($this->postFields, $extraPostFields);
-
-        $result = $this->executePostQuery();
-
-        return $result;
-    }
-
-    public function getAlbumPhotos($extraPostFields)
-    {
-        $result = [];
-
-        if (empty($extraPostFields)) {
-            return $result;
-        }
-
-        $this->postData[CURLOPT_URL] = Config::URL_PHOTOS_GET;
         $this->postData[CURLOPT_POSTFIELDS] = array_merge($this->postFields, $extraPostFields);
 
         $result = $this->executePostQuery();

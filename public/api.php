@@ -1,17 +1,43 @@
 <?php
+
 declare(strict_types=1);
 
-header('Content-Type: application/json; charset=utf-8');
+use App\Classes\VkApiService;
+use App\Controllers\ImagesController;
+use App\Controllers\VideosController;
+use App\Handlers\ImageHandler;
+use App\Handlers\VideoHandler;
+use App\Routing\Router;
+use App\Support\Config;
+use App\Support\Env;
+use App\Support\FileStorage;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use App\Routing\Router;
-use App\Support\Config;
+header('Content-Type: application/json; charset=utf-8');
 
 try {
-    Config::loadEnv();
+    Env::load(Config::envPath());
 
-    $router = new Router();
+    // $vkApi = new VkApiService(
+    //     token: $_ENV['TOKEN'],
+    //     ownerId: (int) $_ENV['OWNER_ID']
+    // );
+
+    $vkApi = new VkApiService();
+
+    $fileStorage = new FileStorage(
+        filesDir: Config::basePath() . '/' . Config::FILES_FOLDER,
+        urlPrefix: Config::FILES_PREFIX
+    );
+
+    $imageHandler = new ImageHandler(vkApi: $vkApi, fileStorage: $fileStorage);
+    $videoHandler = new VideoHandler(vkApi: $vkApi, fileStorage: $fileStorage);
+
+    $imagesController = new ImagesController(imageHandler: $imageHandler, fileStorage: $fileStorage);
+    $videosController = new VideosController(videoHandler: $videoHandler, fileStorage: $fileStorage);
+
+    $router = new Router(imagesController: $imagesController, videosController: $videosController);
 
     $router->dispatch(
         httpRequestMethod: $_SERVER['REQUEST_METHOD'],

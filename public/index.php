@@ -1,7 +1,9 @@
 <?php
+
 use App\Support\Config;
 
 require_once __DIR__ . '/../vendor/autoload.php';
+
 ?>
 
 <!doctype html>
