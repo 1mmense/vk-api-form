@@ -9,12 +9,6 @@ use App\Controllers\VideosController;
 
 class Router
 {
-    public function __construct(
-        private ImagesController $imagesController,
-        private VideosController $videosController,
-    ) {
-    }
-
     // Карта: HTTP-метод => mode => [Контроллер, Метод]
     private array $routes = [
         'GET' => [
@@ -28,29 +22,29 @@ class Router
         ],
     ];
 
-    public function dispatch(string $httpRequestMethod, ?string $mode): void
+    public function __construct(
+        private ImagesController $imagesController,
+        private VideosController $videosController,
+    ) {
+    }
+
+    /**
+     * @throws RoutingException
+     */
+    public function dispatch(string $httpRequestMethod, ?string $mode): array
     {
         if (!isset($this->routes[$httpRequestMethod])) {
-            http_response_code(405); // Method Not Allowed
-            echo json_encode(['error' => "Method '{$httpRequestMethod}' is not allowed"]);
-
-            return;
+            throw RoutingException::methodNotAllowed($httpRequestMethod);
         }
 
         if ($mode === null) {
-            http_response_code(400); // Bad Request
-            echo json_encode(['error' => 'mode is required']);
-
-            return;
+            throw RoutingException::modeIsRequired();
         }
 
         $route = $this->routes[$httpRequestMethod][$mode] ?? null;
 
         if ($route === null) {
-            http_response_code(404); // Not Found
-            echo json_encode(['error' => "Route '{$httpRequestMethod}/{$mode}' not found"]);
-
-            return;
+            throw RoutingException::routeNotFound($httpRequestMethod, $mode);
         }
 
         [$controllerClass, $methodName] = $route;
@@ -60,6 +54,6 @@ class Router
             VideosController::class => $this->videosController,
         };
 
-        $controller->$methodName();
+        return $controller->$methodName();
     }
 }

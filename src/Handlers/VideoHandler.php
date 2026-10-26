@@ -7,13 +7,14 @@ namespace App\Handlers;
 use App\Support\Config;
 use App\Classes\VkApiService;
 use App\Support\FileStorage;
-use App\Support\Functions;
+use App\Classes\VkConfig;
 
 class VideoHandler
 {
     public function __construct(
         private VkApiService $vkApi,
         private FileStorage $fileStorage,
+        private VkConfig $vkConfig
     ) {
     }
 
@@ -24,34 +25,33 @@ class VideoHandler
             'error'   => null
         ];
 
-        $isMoveAfterUpload = (bool) $params['isMoveAfterUpload'] ?? false;
-        $isPostToWall      = (bool) $params['isPostVideosToWall'] ?? false;
-        $filePath          = (string) $params['filePath'] ?? '';
+        $isMoveAfterUpload = (bool) ($params['isMoveAfterUpload'] ?? false);
+        $isPostToWall      = (bool) ($params['isPostVideosToWall'] ?? false);
+        $filePath          = (string) ($params['filePath'] ?? '');
 
-        if (empty($filePath) || !file_exists($filePath)) {
+        if ($filePath === '' || !file_exists($filePath)) {
             $result['error'] = 'No such file found: ' . $filePath;
 
             return $result;
         }
 
         $extraPostFields = [
-            'group_id'  => $_ENV['GROUP_ID'],
-            'album_id'  => $_ENV['ALBUM_ID'],
+            'group_id'  => $this->vkConfig->groupId,
+            'album_id'  => $this->vkConfig->albumId,
             'file_path' => $filePath
         ];
 
         $pathinfo = pathinfo($filePath);
 
-        $this->vkApi->postData[CURLOPT_POSTFIELDS] = array_merge($this->vkApi->postFields, [
-            'group_id'    => $extraPostFields['group_id'],
-            'repeat'      => 1,
-            'no_comments' => 0,
-            'name'        => $pathinfo['basename'],
-        ]);
-
-        $this->vkApi->postData[CURLOPT_URL] = Config::URL_VIDEOS_SAVE;
-
-        $getUploadUrlResult = $this->vkApi->executePostQuery();
+        $getUploadUrlResult = $this->vkApi->executePostQuery(
+            url: Config::URL_VIDEOS_SAVE,
+            postFields: [
+                'group_id'    => $extraPostFields['group_id'],
+                'repeat'      => 1,
+                'no_comments' => 0,
+                'name'        => $pathinfo['basename'],
+            ],
+        );
 
         if (!empty($getUploadUrlResult['error'])) {
             $result['error'] = $getUploadUrlResult['error'];
@@ -67,17 +67,16 @@ class VideoHandler
             return $result;
         }
 
-        $this->vkApi->postData[CURLOPT_URL] = $uploadUrl;
-
-        $this->vkApi->postData[CURLOPT_POSTFIELDS] = [
-            'video_file' => new \CURLFile(
-                $filePath,
-                mime_content_type($filePath),
-                $pathinfo['basename']
-            ),
-        ];
-
-        $uploadResult = $this->vkApi->executePostQuery();
+        $uploadResult = $this->vkApi->executePostQuery(
+            url: $uploadUrl,
+            postFields: [
+                'video_file' => new \CURLFile(
+                    $filePath,
+                    mime_content_type($filePath),
+                    $pathinfo['basename']
+                )
+            ],
+        );
 
         if (!empty($uploadResult['error'])) {
             $result['error'] = $uploadResult['error'];
@@ -95,7 +94,7 @@ class VideoHandler
             && !empty($uploadResult['video_id'])
         ) {
             $wallPostFields = [
-                'attachments' => 'video-' . $_ENV['GROUP_ID'] . '_' . $uploadResult['video_id'],
+                'attachments' => 'video-' . $this->vkConfig->groupId . '_' . $uploadResult['video_id'],
             ];
 
             $wallPostResult = $this->vkApi->postToWall($wallPostFields);
@@ -183,22 +182,21 @@ class VideoHandler
     }
 
     // TODO: Рефакторинг
-    public function startThumbGeneration()
+    public function startThumbGeneration(): void
     {
-        $cmd = sprintf(
-            'nohup php %s > /dev/null 2>&1 &',
-            escapeshellarg(__DIR__ . '/../../generate_thumbs.php')
-        );
+        if (function_exists('exec')) {
+            $cmd = sprintf(
+                'nohup php %s > /dev/null 2>&1 &',
+                escapeshellarg(__DIR__ . '/../../generate_thumbs.php')
+            );
 
-        exec($cmd);
+            exec($cmd);
+        }
     }
 
-    public function getVideoThumbs(): array
+    public function getVideosWithThumbs(): array
     {
-        $this->removeOrphanThumbs();
-
         $videos = $this->fileStorage->listUrls(Config::UPLOAD_VIDEOS_FOLDER);
-
         $result = [];
 
         foreach ($videos as $videoPath) {

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Classes;
@@ -7,56 +8,68 @@ use App\Support\Config;
 
 class VkApiService
 {
-    public $postData = [];
-    public $postFields = [];
+    private array $basePostFields;
 
-    public function __construct()
+    public function __construct(private VkConfig $vkConfig)
     {
-        $this->postFields = [
-            'owner_id'     => $_ENV['OWNER_ID'],
+        $this->basePostFields = [
+            'owner_id'     => $this->vkConfig->ownerId,
             'from_group'   => true,
-            'access_token' => $_ENV['TOKEN'],
+            'access_token' => $this->vkConfig->accessToken,
             'v'            => Config::API_VERSION,
             'signed'       => 1,
         ];
+    }
 
-        $this->postData = [
+    /**
+     * Выполняет POST-запрос к указанному URL.
+     *
+     * @param string $url        Полный URL метода VK API
+     * @param array  $postFields Поля для отправки (будут объединены с базовыми)
+     *
+     * @return array Ответ API в виде массива или ['error' => ...] при сбое
+     */
+    public function executePostQuery(string $url, array $postFields): array
+    {
+        $fields = array_merge($this->basePostFields, $postFields);
+
+        $curlHandle = curl_init();
+
+        if ($curlHandle === false) {
+            return ['error' => 'Failed to initialize cURL'];
+        }
+
+        curl_setopt_array($curlHandle, [
+            CURLOPT_URL            => $url,
             CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $fields,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
-        ];
-    }
+        ]);
 
-    public function executePostQuery()
-    {
-        $result = false;
+        $query = curl_exec($curlHandle);
 
-        if (empty($this->postData)) {
-            return $result;
+        if ($query === false) {
+            $error = curl_error($curlHandle);
+
+            return ['error' => 'cURL error: ' . $error];
         }
 
-        $ch = curl_init();
-        curl_setopt_array($ch, $this->postData);
-        $query = curl_exec($ch);
         $result = json_decode($query, true);
 
+        if (!is_array($result)) {
+            return ['error' => 'Invalid JSON response from VK API'];
+        }
+
         return $result;
     }
 
-    public function postToWall($extraPostFields)
+    public function postToWall(array $extraPostFields): array
     {
-        $result = false;
-
-        if (empty($extraPostFields)) {
-            return $result;
-        }
-
-        $this->postData[CURLOPT_URL] = Config::URL_WALL_POST;
-        $this->postData[CURLOPT_POSTFIELDS] = array_merge($this->postFields, $extraPostFields);
-
-        $result = $this->executePostQuery();
-
-        return $result;
+        return $this->executePostQuery(
+            url: Config::URL_WALL_POST,
+            postFields: $extraPostFields,
+        );
     }
 }

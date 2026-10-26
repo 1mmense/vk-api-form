@@ -4,36 +4,22 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Handlers\Handler;
 use App\Handlers\ImageHandler;
-use App\Support\Config;
-use App\Support\FileStorage;
+use App\Support\Response;
 
 class ImagesController
 {
     public function __construct(
-        private ImageHandler $imageHandler,
-        private FileStorage $fileStorage
+        private ImageHandler $imageHandler
     ) {
     }
 
-    public function index(): void
+    public function index(): array
     {
-        $images = $this->fileStorage->listUrls(Config::UPLOAD_IMAGES_FOLDER);
-
-        $result = [];
-
-        foreach ($images as $imagePath) {
-            $result[] = [
-                'path'     => $imagePath,
-                'basename' => basename($imagePath),
-            ];
-        }
-
-        echo json_encode($result);
+        return Response::success($this->imageHandler->getImages());
     }
 
-    public function upload(): void
+    public function upload(): array
     {
         $params = [
             'filePath'           => filter_input(INPUT_POST, 'filePath'),
@@ -42,31 +28,15 @@ class ImagesController
         ];
 
         if (empty($params['filePath'])) {
-            http_response_code(500);
-
-            echo json_encode([
-                'success' => false,
-                'error'   => 'No filePath specified',
-            ]);
-
-            return;
+            return Response::error("No 'filePath' specified");
         }
 
-        $result = $this->imageHandler->uploadImage(params: $params);
+        $uploadResult = $this->imageHandler->uploadImage(params: $params);
 
-        if ($result['success']) {
-            echo json_encode([
-                'success' => true,
-            ]);
-
-            return;
+        if (!empty($uploadResult['success'])) {
+            return Response::success($uploadResult);
         }
 
-        http_response_code(500);
-
-        echo json_encode([
-            'success' => false,
-            'error'   => $result['error'],
-        ]);
+        return Response::error($uploadResult['error'] ?? 'Unknown upload error');
     }
 }

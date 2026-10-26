@@ -7,13 +7,30 @@ namespace App\Handlers;
 use App\Support\Config;
 use App\Classes\VkApiService;
 use App\Support\FileStorage;
+use App\Classes\VkConfig;
 
 class ImageHandler
 {
     public function __construct(
         private VkApiService $vkApi,
         private FileStorage $fileStorage,
+        private VkConfig $vkConfig
     ) {
+    }
+
+    public function getImages(): array
+    {
+        $images = $this->fileStorage->listUrls(Config::UPLOAD_IMAGES_FOLDER);
+        $result = [];
+
+        foreach ($images as $imagePath) {
+            $result[] = [
+                'path'     => $imagePath,
+                'basename' => basename($imagePath),
+            ];
+        }
+
+        return $result;
     }
 
     public function uploadImage(array $params = []): array
@@ -23,32 +40,31 @@ class ImageHandler
             'error'   => null,
         ];
 
-        $isMoveAfterUpload = (bool) $params['isMoveAfterUpload'] ?? false;
-        $isPostToWall      = (bool) $params['isPostImagesToWall'] ?? false;
-        $filePath          = (string) $params['filePath'] ?? '';
+        $isMoveAfterUpload = (bool) ($params['isMoveAfterUpload'] ?? false);
+        $isPostToWall      = (bool) ($params['isPostImagesToWall'] ?? false);
+        $filePath          = (string) ($params['filePath'] ?? '');
 
-        if (empty($filePath) || !file_exists($filePath)) {
+        if ($filePath === '' || !file_exists($filePath)) {
             $result['error'] = 'No such file found: ' . $filePath;
 
             return $result;
         }
 
         $extraPostFields = [
-            'group_id'  => $_ENV['GROUP_ID'],
-            'album_id'  => $_ENV['ALBUM_ID'],
+            'group_id'  => $this->vkConfig->groupId,
+            'album_id'  => $this->vkConfig->albumId,
             'file_path' => $filePath
         ];
 
-        $getUploadServerFields = array_merge($this->vkApi->postFields, [
-            'group_id' => $extraPostFields['group_id'],
-            'album_id' => $extraPostFields['album_id'],
-        ]);
+        $getUploadUrlResult = $this->vkApi->executePostQuery(
+            url: Config::URL_GET_IMAGES_UPLOAD_SERVER,
+            postFields: [
+                'group_id' => $extraPostFields['group_id'],
+                'album_id' => $extraPostFields['album_id'],
+            ],
+        );
 
-        $this->vkApi->postData[CURLOPT_URL]        = Config::URL_GET_IMAGES_UPLOAD_SERVER;
-        $this->vkApi->postData[CURLOPT_POSTFIELDS] = $getUploadServerFields;
-
-        $getUploadUrlResult = $this->vkApi->executePostQuery();
-        $uploadUrl          = $getUploadUrlResult['response']['upload_url'] ?? null;
+        $uploadUrl = $getUploadUrlResult['response']['upload_url'] ?? null;
 
         if (empty($uploadUrl)) {
             $result['error'] = 'upload_url is empty';
@@ -58,22 +74,21 @@ class ImageHandler
 
         $pathinfo = pathinfo($filePath);
 
-        $this->vkApi->postData[CURLOPT_URL]    = $uploadUrl;
-        $this->vkApi->postData[CURLOPT_HEADER] = false;
+        $uploadResult = $this->vkApi->executePostQuery(
+            url: $uploadUrl,
+            postFields: [
+                'file1' => new \CURLFile(
+                    $filePath,
+                    mime_content_type($filePath),
+                    $pathinfo['basename']
+                ),
+            ],
+        );
 
-        $this->vkApi->postData[CURLOPT_POSTFIELDS] = [
-            'file1' => new \CURLFile(
-                $filePath,
-                mime_content_type($filePath),
-                $pathinfo['basename']
-            ),
-        ];
-
-        $uploadResult = $this->vkApi->executePostQuery();
-        $server       = $uploadResult['server'] ?? null;
-        $imagesList   = $uploadResult['photos_list'] ?? null;
-        $albumId      = $uploadResult['aid'] ?? null;
-        $hash         = $uploadResult['hash'] ?? null;
+        $server     = $uploadResult['server'] ?? null;
+        $imagesList = $uploadResult['photos_list'] ?? null;
+        $albumId    = $uploadResult['aid'] ?? null;
+        $hash       = $uploadResult['hash'] ?? null;
 
         if (!isset($server, $imagesList, $albumId, $hash)) {
             $result['error'] = 'upload_result missing fields';
@@ -81,19 +96,16 @@ class ImageHandler
             return $result;
         }
 
-        $this->vkApi->postData[CURLOPT_URL] = Config::URL_PHOTOS_SAVE;
-
-        $this->vkApi->postData[CURLOPT_POSTFIELDS] = [
-            'access_token' => $this->vkApi->postFields['access_token'],
-            'v'            => $this->vkApi->postFields['v'],
-            'group_id'     => $extraPostFields['group_id'],
-            'server'       => $server,
-            'photos_list'  => $imagesList,
-            'album_id'     => $albumId,
-            'hash'         => $hash,
-        ];
-
-        $saveResult = $this->vkApi->executePostQuery();
+        $saveResult = $this->vkApi->executePostQuery(
+            url: Config::URL_PHOTOS_SAVE,
+            postFields: [
+                'group_id'    => $extraPostFields['group_id'],
+                'server'      => $server,
+                'photos_list' => $imagesList,
+                'album_id'    => $albumId,
+                'hash'        => $hash,
+            ],
+        );
 
         if (!empty($saveResult['error'])) {
             $result['error'] = $saveResult['error'];
@@ -111,7 +123,7 @@ class ImageHandler
 
         if ($isPostToWall) {
             $wallPostFields = [
-                'attachments' => 'photo-' . $_ENV['GROUP_ID'] . '_' . $savedImageData['id'],
+                'attachments' => 'photo-' . $this->vkConfig->groupId . '_' . $savedImageData['id'],
             ];
 
             $wallResult = $this->vkApi->postToWall($wallPostFields);

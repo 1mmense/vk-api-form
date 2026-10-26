@@ -5,43 +5,24 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Handlers\VideoHandler;
-use App\Support\Config;
-use App\Support\FileStorage;
-use App\Support\Functions;
+use App\Support\Response;
 
 class VideosController
 {
     public function __construct(
         private VideoHandler $videoHandler,
-        private FileStorage $fileStorage
     ) {
     }
 
-    public function index(): void
+    public function index(): array
     {
         $this->videoHandler->removeOrphanThumbs();
         $this->videoHandler->startThumbGeneration();
 
-        $videos = $this->fileStorage->listUrls(Config::UPLOAD_VIDEOS_FOLDER);
-
-        $result = [];
-
-        foreach ($videos as $videoPath) {
-            $pathinfo  = pathinfo($videoPath);
-            $thumbFile = $this->fileStorage->getThumbFile($pathinfo['filename']);
-            $thumbUrl  = $this->fileStorage->getThumbUrl($pathinfo['filename']);
-
-            $result[] = [
-                'path'      => $videoPath,
-                'basename'  => basename($videoPath),
-                'thumbnail' => file_exists($thumbFile) ? $thumbUrl : null,
-            ];
-        }
-
-        echo json_encode($result);
+        return Response::success($this->videoHandler->getVideosWithThumbs());
     }
 
-    public function upload(): void
+    public function upload(): array
     {
         $params = [
             'filePath'           => filter_input(INPUT_POST, 'filePath'),
@@ -50,38 +31,20 @@ class VideosController
         ];
 
         if (empty($params['filePath'])) {
-            http_response_code(500);
-
-            echo json_encode([
-                'success' => false,
-                'error'   => "No 'filePath' specified",
-            ]);
-
-            return;
+            return Response::error("No 'filePath' specified");
         }
 
-        $result = $this->videoHandler->uploadVideo(params: $params);
+        $uploadResult = $this->videoHandler->uploadVideo(params: $params);
 
-        if ($result['success']) {
-            echo json_encode([
-                'success' => true
-            ]);
-
-            return;
+        if (!empty($uploadResult['success'])) {
+            return Response::success($uploadResult);
         }
 
-        http_response_code(500);
-
-        echo json_encode([
-            'success' => false,
-            'error'   => $result['error']
-        ]);
+        return Response::error($uploadResult['error'] ?? 'Unknown upload error');
     }
 
-    public function thumbs(): void
+    public function thumbs(): array
     {
-        $result = $this->videoHandler->getVideoThumbs();
-
-        echo json_encode($result);
+        return Response::success($this->videoHandler->getVideosWithThumbs());
     }
 }

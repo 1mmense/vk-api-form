@@ -61,7 +61,7 @@ class FileStorage
         );
     }
 
-    public function getThumbFile(string $videoName = '')
+    public function getThumbFile(string $videoName = ''): string
     {
         $result = '';
 
@@ -82,7 +82,7 @@ class FileStorage
         return $result;
     }
 
-    public function getThumbUrl(string $videoName = '')
+    public function getThumbUrl(string $videoName = ''): string
     {
         $result = '';
 
