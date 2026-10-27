@@ -5,20 +5,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let isPosting = false;
 
-    async function loadPhotos() {
+    async function loadImages() {
         try {
             const response = await fetch('api.php?mode=get_all_images');
-            const photos = await response.json();
+            const { data: images = [] } = await response.json();
 
             gridImages.innerHTML = '';
 
-            if (!photos || photos.length === 0) {
-                gridImages.innerHTML = '<p class="col-span-full text-center text-gray-500 py-8">No photos found</p>';
+            if (!images || images.length === 0) {
+                gridImages.innerHTML = '<p class="col-span-full text-center text-gray-500 py-8">No images found</p>';
 
                 return;
             }
 
-            photos.forEach(photo => {
+            images.forEach(photo => {
                 const card = template.content.cloneNode(true).querySelector('.card-template');
                 card.dataset.path = photo.path;
 
@@ -30,8 +30,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 gridImages.appendChild(card);
             });
         } catch (error) {
-            console.error('Failed to load photos:', error);
-            gridImages.innerHTML = '<p class="col-span-full text-center text-red-400 py-8">Error loading photos</p>';
+            console.error('Failed to load images:', error);
+            gridImages.innerHTML = '<p class="col-span-full text-center text-red-400 py-8">Error loading images</p>';
         }
     }
 
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return { success: true };
     }
 
-    async function postAllPhotos() {
+    async function postAllImages() {
         if (isPosting) {
             return
         };
@@ -158,13 +158,13 @@ document.addEventListener('DOMContentLoaded', function () {
         buttonUploadImages.classList.remove('opacity-50', 'cursor-not-allowed');
 
         if (gridImages.querySelectorAll('.card-template').length === 0) {
-            gridImages.innerHTML = '<p class="col-span-full text-center text-green-400 py-8">All photos posted successfully!</p>';
+            gridImages.innerHTML = '<p class="col-span-full text-center text-green-400 py-8">All images posted successfully!</p>';
         }
 
         buttonUploadImages.textContent = buttonText;
     }
 
-    loadPhotos();
+    loadImages();
 
-    buttonUploadImages.addEventListener('click', postAllPhotos);
+    buttonUploadImages.addEventListener('click', postAllImages);
 });

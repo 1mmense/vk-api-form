@@ -6,6 +6,7 @@ namespace App\Routing;
 
 use App\Controllers\ImagesController;
 use App\Controllers\VideosController;
+use App\Exceptions\RoutingException;
 
 class Router
 {

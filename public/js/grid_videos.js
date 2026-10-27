@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function () {
     async function loadVideos() {
         try {
             const response = await fetch('api.php?mode=get_all_videos');
-            const videos = await response.json();
+            const { data: videos = [] } = await response.json();
 
             gridVideos.innerHTML = '';
 
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             const response = await fetch('api.php?mode=get_video_thumbs');
-            const videos = await response.json();
+            const { data: videos = [] } = await response.json();
             const cards = Array.from(gridVideos.querySelectorAll('.card-template'));
 
             videos.forEach(video => {

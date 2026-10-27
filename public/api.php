@@ -9,7 +9,7 @@ use App\Controllers\VideosController;
 use App\Handlers\ImageHandler;
 use App\Handlers\VideoHandler;
 use App\Routing\Router;
-use App\Routing\RoutingException;
+use App\Exceptions\RoutingException;
 use App\Support\Config;
 use App\Support\Env;
 use App\Support\FileStorage;

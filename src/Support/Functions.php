@@ -33,6 +33,8 @@ class Functions
 
     public static function fn_print_r()
     {
+        header('Content-Type: text/html; charset=utf-8');
+
         $args = func_get_args();
 
         $console = false;
@@ -54,22 +56,12 @@ class Functions
             }
             echo('</ol><div style="clear:left;"></div>');
         }
-    }
 
-    public static function fn_print_die()
-    {
-        $args = func_get_args();
-        call_user_func_array('fn_print_r', $args);
-        exit(1);
+        exit;
     }
 
     public static function fn_echo_breaker($text)
     {
         echo $text . "\n";
     }
-
-    // function toBool($value)
-    // {
-    //     return $value === true || $value === self::YES;
-    // }
 }

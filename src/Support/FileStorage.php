@@ -69,8 +69,7 @@ class FileStorage
             return $result;
         }
 
-        $result =
-            Config::basePath()
+        $result = Config::basePath()
             . '/'
             . Config::FILES_FOLDER
             . '/'
@@ -90,8 +89,7 @@ class FileStorage
             return $result;
         }
 
-        $result =
-            Config::FILES_PREFIX
+        $result = Config::FILES_PREFIX
             . '/'
             . Config::VIDEO_THUMBS_FOLDER
             . '/thumbnail_'
