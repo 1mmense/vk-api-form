@@ -20,11 +20,16 @@ RUN apt-get update && apt-get install -y \
     && bash nodesource_setup.sh \
     && apt-get install -y nodejs \
     && rm nodesource_setup.sh \
+    && curl -L 'https://pecl.php.net/get/xdebug-3.5.3.tgz' -o /tmp/xdebug.tgz \
+    && pecl install /tmp/xdebug.tgz \
+    && docker-php-ext-enable xdebug \
+    && rm /tmp/xdebug.tgz \
     && rm -rf /var/lib/apt/lists/*
 
 # Копируем composer и конфигурацию Apache
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY docker/apache/site.conf /etc/apache2/sites-available/000-default.conf
+COPY docker/php/xdebug.ini /usr/local/etc/php/conf.d/20-xdebug.ini
 
 # Включаем mod_rewrite
 RUN a2enmod rewrite

@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const gridVideos = document.getElementById('gridVideos');
     const buttonUploadVideos = document.getElementById('buttonUploadVideos');
     const template = document.getElementById('cardTemplate');
-    const pollingInterval = 5000;
+    const pollingInterval = 2500;
 
     let isPosting = false;
 
@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let done = 0;
         const cardsToPost = cards.length;
 
-        const buttonText = buttonUploadImages.textContent;
+        const buttonText = buttonUploadVideos.textContent;
         buttonUploadVideos.textContent = `Posting ${done}/${cardsToPost}...`;
 
         // Добавляем задачи в пул
@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 done++;
-                buttonUploadVideos.textContent = `Posting ${done}/${cardsToPost}...`;
+                buttonUploadVideos.textContent = `Posting (done ${done}/${cardsToPost}...)`;
             });
         });
 

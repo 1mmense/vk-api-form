@@ -56,15 +56,15 @@ class ImageHandler
             'file_path' => $filePath
         ];
 
-        $getUploadUrlResult = $this->vkApi->executePostQuery(
-            url: Config::URL_GET_IMAGES_UPLOAD_SERVER,
+        $uploadUrlData = $this->vkApi->callApiMethod(
+            methodUrl: Config::URL_GET_IMAGES_UPLOAD_SERVER,
             postFields: [
-                'group_id' => $extraPostFields['group_id'],
-                'album_id' => $extraPostFields['album_id'],
+                'group_id' => $this->vkConfig->groupId,
+                'album_id' => $this->vkConfig->albumId,
             ],
         );
 
-        $uploadUrl = $getUploadUrlResult['response']['upload_url'] ?? null;
+        $uploadUrl = $uploadUrlData['response']['upload_url'] ?? null;
 
         if (empty($uploadUrl)) {
             $result['error'] = 'upload_url is empty';
@@ -74,15 +74,13 @@ class ImageHandler
 
         $pathinfo = pathinfo($filePath);
 
-        $uploadResult = $this->vkApi->executePostQuery(
-            url: $uploadUrl,
-            postFields: [
-                'file1' => new \CURLFile(
-                    $filePath,
-                    mime_content_type($filePath),
-                    $pathinfo['basename']
-                ),
-            ],
+        $uploadResult = $this->vkApi->uploadToTemporaryUrl(
+            uploadUrl: $uploadUrl,
+            file: new \CURLFile(
+                $filePath,
+                mime_content_type($filePath) ?: 'application/octet-stream',
+                $pathinfo['basename']
+            ),
         );
 
         $server     = $uploadResult['server'] ?? null;
@@ -96,8 +94,8 @@ class ImageHandler
             return $result;
         }
 
-        $saveResult = $this->vkApi->executePostQuery(
-            url: Config::URL_PHOTOS_SAVE,
+        $saveResult = $this->vkApi->callApiMethod(
+            methodUrl: Config::URL_PHOTOS_SAVE,
             postFields: [
                 'group_id'    => $extraPostFields['group_id'],
                 'server'      => $server,

@@ -35,31 +35,25 @@ class VideoHandler
             return $result;
         }
 
-        $extraPostFields = [
-            'group_id'  => $this->vkConfig->groupId,
-            'album_id'  => $this->vkConfig->albumId,
-            'file_path' => $filePath
-        ];
-
         $pathinfo = pathinfo($filePath);
 
-        $getUploadUrlResult = $this->vkApi->executePostQuery(
-            url: Config::URL_VIDEOS_SAVE,
+        $uploadUrlData = $this->vkApi->callApiMethod(
+            methodUrl: Config::URL_VIDEOS_SAVE,
             postFields: [
-                'group_id'    => $extraPostFields['group_id'],
+                'group_id'    => $this->vkConfig->groupId,
                 'repeat'      => 1,
                 'no_comments' => 0,
                 'name'        => $pathinfo['basename'],
             ],
         );
 
-        if (!empty($getUploadUrlResult['error'])) {
-            $result['error'] = $getUploadUrlResult['error'];
+        if (!empty($uploadUrlData['error'])) {
+            $result['error'] = $uploadUrlData['error'];
 
             return $result;
         }
 
-        $uploadUrl = $getUploadUrlResult['response']['upload_url'] ?? null;
+        $uploadUrl = $uploadUrlData['response']['upload_url'] ?? null;
 
         if (empty($uploadUrl)) {
             $result['error'] = 'upload_url is empty';
@@ -67,15 +61,13 @@ class VideoHandler
             return $result;
         }
 
-        $uploadResult = $this->vkApi->executePostQuery(
-            url: $uploadUrl,
-            postFields: [
-                'video_file' => new \CURLFile(
-                    $filePath,
-                    mime_content_type($filePath),
-                    $pathinfo['basename']
-                )
-            ],
+        $uploadResult = $this->vkApi->uploadToTemporaryUrl(
+            uploadUrl: $uploadUrl,
+            file: new \CURLFile(
+                $filePath,
+                mime_content_type($filePath) ?: 'application/octet-stream',
+                $pathinfo['basename']
+            ),
         );
 
         if (!empty($uploadResult['error'])) {

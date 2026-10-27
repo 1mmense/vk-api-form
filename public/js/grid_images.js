@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const cardsToPost = cards.length;
 
         const buttonText = buttonUploadImages.textContent;
-        buttonUploadImages.textContent = `Posting ${done}/${cardsToPost}...`;
+        buttonUploadImages.textContent = `Posting (done ${done}/${cardsToPost}...)`;
 
         // Добавляем задачи в пул
         const promises = cards.map(card => {
