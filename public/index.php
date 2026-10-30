@@ -30,15 +30,48 @@ require_once __DIR__ . '/../vendor/autoload.php';
 </head>
 
 <body class="bg-gray-800 min-h-screen">
-    <div class="container mx-auto px-4 py-8 text-gray-200">
-        <div class="max-w-4xl mx-auto rounded-xl shadow-md overflow-hidden p-6 bg-white/10">
-            <h1 class="text-3xl font-bold text-center mb-8">VK Upload App</h1>
+    <div class="flex gap-2 flex-col max-w-4xl mx-auto px-4 py-8 text-gray-200">
+        <header class="p-2 w-full rounded-xl bg-black/15">
+            <div class="flex gap-2 items-center px-2">
+                <a href="#" class="text-xl font-bold">
+                    <img
+                        class="max-h-full max-w-full"
+                        src="images/favicon.ico"
+                        alt="favicon"
+                    />
+                </a>
 
-            <div class="flex flex-col my-8 gap-4">
+                <nav class="flex items-center gap-2" aria-label="Main navigation">
+                    <a
+                        href="#"
+                        class="rounded-lg bg-white/10 px-4 py-2 text-sm font-medium"
+                        aria-current="page"
+                    >
+                        Upload
+                    </a>
+                    <a
+                        href="#"
+                        class="rounded-lg px-4 py-2 text-sm font-medium text-gray-400 transition-colors duration-200 hover:bg-white/5 hover:text-gray-200"
+                    >
+                        Liked
+                    </a>
+                    <a
+                        href="#"
+                        class="rounded-lg px-4 py-2 text-sm font-medium text-gray-400 transition-colors duration-200 hover:bg-white/5 hover:text-gray-200"
+                    >
+                        Settings
+                    </a>
+                </nav>
+            </div>
+        </header>
+        <div class="flex flex-col gap-4 rounded-xl shadow-md overflow-hidden p-4 bg-white/10">
+            <!-- <h1 class="text-3xl font-bold text-center mb-8">VK Upload App</h1> -->
+
+            <div class="flex flex-col gap-4">
                 <div id="buttonsContainer" class="flex justify-between gap-6">
                     <button id="buttonUploadImages"
                         class="
-                            w-full relative group overflow-hidden rounded-xl bg-linear-to-r from-sky-600 to-indigo-700 px-6 py-3.5 text-white font-medium shadow-lg shadow-blue-500/25 transition-all duration-300 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer
+                            w-full relative group overflow-hidden rounded-xl bg-linear-to-r from-sky-600 to-indigo-700 px-6 py-3.5 font-medium shadow-lg shadow-blue-500/25 transition-all duration-300 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer
                         "
                     >
                         <div class="absolute inset-0 rounded-xl border border-white/20 pointer-events-none">
@@ -56,7 +89,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
                     <button id="buttonUploadVideos"
                         class="
-                            w-full relative group overflow-hidden rounded-xl bg-linear-to-r from-purple-600 to-pink-700 px-6 py-3.5 text-white font-medium shadow-lg shadow-purple-500/25 transition-all duration-300 hover:shadow-purple-500/40 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer
+                            w-full relative group overflow-hidden rounded-xl bg-linear-to-r from-purple-600 to-pink-700 px-6 py-3.5 font-medium shadow-lg shadow-purple-500/25 transition-all duration-300 hover:shadow-purple-500/40 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer
                         "
                     >
                         <div class="absolute inset-0 rounded-xl border border-white/20 pointer-events-none">
@@ -132,7 +165,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
                                         transition-all duration-200
                                     ">
                                         <svg
-                                            class="w-3.5 h-3.5 text-white opacity-0 scale-50 group-has-checked/checkbox:opacity-100 group-has-checked/checkbox:scale-100 transition-all duration-200"
+                                            class="w-3.5 h-3.5 opacity-0 scale-50 group-has-checked/checkbox:opacity-100 group-has-checked/checkbox:scale-100 transition-all duration-200"
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -147,7 +180,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
                                         </svg>
                                     </div>
 
-                                    <span class="text-gray-200 transition-colors duration-200">
+                                    <span class="transition-colors duration-200">
                                         Post Images to wall
                                     </span>
                                 </label>
@@ -179,7 +212,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
                                         transition-all duration-200
                                     ">
                                         <svg
-                                            class="w-3.5 h-3.5 text-white opacity-0 scale-50 group-has-checked/checkbox:opacity-100 group-has-checked/checkbox:scale-100 transition-all duration-200"
+                                            class="w-3.5 h-3.5 opacity-0 scale-50 group-has-checked/checkbox:opacity-100 group-has-checked/checkbox:scale-100 transition-all duration-200"
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -194,7 +227,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
                                         </svg>
                                     </div>
 
-                                    <span class="text-gray-200 transition-colors duration-200">
+                                    <span class="transition-colors duration-200">
                                         Move Images after upload
                                     </span>
                                 </label>
@@ -232,7 +265,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
                                         transition-all duration-200
                                     ">
                                         <svg
-                                            class="w-3.5 h-3.5 text-white opacity-0 scale-50 group-has-checked/checkbox:opacity-100 group-has-checked/checkbox:scale-100 transition-all duration-200"
+                                            class="w-3.5 h-3.5 opacity-0 scale-50 group-has-checked/checkbox:opacity-100 group-has-checked/checkbox:scale-100 transition-all duration-200"
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -247,7 +280,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
                                         </svg>
                                     </div>
 
-                                    <span class="text-gray-200 transition-colors duration-200">
+                                    <span class="transition-colors duration-200">
                                         Post Videos to wall
                                     </span>
                                 </label>
@@ -279,7 +312,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
                                         transition-all duration-200
                                     ">
                                         <svg
-                                            class="w-3.5 h-3.5 text-white opacity-0 scale-50 group-has-checked/checkbox:opacity-100 group-has-checked/checkbox:scale-100 transition-all duration-200"
+                                            class="w-3.5 h-3.5 opacity-0 scale-50 group-has-checked/checkbox:opacity-100 group-has-checked/checkbox:scale-100 transition-all duration-200"
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -294,7 +327,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
                                         </svg>
                                     </div>
 
-                                    <span class="text-gray-200 transition-colors duration-200">
+                                    <span class="transition-colors duration-200">
                                         Move Videos after upload
                                     </span>
                                 </label>
@@ -304,8 +337,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
                 </details>
             </div>
 
-            <div class="flex flex-col items-center justify-center gap-6 mt-12">
-                <h2 class="text-xl font-bold text-gray-100 flex items-center gap-3 w-full">
+            <div class="flex flex-col items-center justify-center gap-4">
+                <h2 class="text-xl font-bold flex items-center gap-3 w-full">
                     <span class="w-1.5 h-6 rounded-full bg-linear-to-b from-sky-400 to-indigo-500">
                     </span>
 
@@ -314,11 +347,11 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
                 <div id="gridImages" class="
                     border border-gray-500 bg-gray-800/40 rounded-xl
-                    p-2 w-full max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4
+                    p-2 w-full max-w-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4
                 ">
                 </div>
 
-                <h2 class="text-xl font-bold text-gray-100 flex items-center gap-3 w-full">
+                <h2 class="text-xl font-bold flex items-center gap-3 w-full">
                     <span class="w-1.5 h-6 rounded-full bg-linear-to-b from-purple-400 to-pink-500">
                     </span>
 
@@ -327,7 +360,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
                 <div id="gridVideos" class="
                     border border-gray-500 bg-gray-800/40 rounded-xl
-                    p-2 w-full max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4
+                    p-2 w-full max-w-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4
                 ">
                 </div>
             </div>
@@ -354,7 +387,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
                 class="card-status absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity duration-300 pointer-events-none"
             >
                 <svg
-                    class="card-spinner animate-spin h-8 w-8 text-white hidden"
+                    class="card-spinner animate-spin h-8 w-8 hidden"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -408,7 +441,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
             </div>
 
             <div class="
-                card-name absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/90 to-black/5 p-2 text-xs truncate text-gray-200 font-medium
+                card-name absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/90 to-black/5 p-2 text-xs truncate font-medium
             ">
             </div>
         </div>
